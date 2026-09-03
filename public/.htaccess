@@ -1,0 +1,25 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    Options +FollowSymlinks
+    RewriteEngine On
+
+    RewriteBase /mms/
+
+    # Never rewrite the front controller itself
+    RewriteRule ^index\.php$ - [L]
+
+    # Serve real files and directories normally
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Everything else goes through CodeIgniter
+    RewriteRule ^ index.php [END,QSA]
+
+    # Pass Authorization header to PHP
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+
+ServerSignature Off

@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Remove index.php from URL
+RewriteCond %{THE_REQUEST} ^GET.*index\.php [NC]
+RewriteRule (.*?)index\.php/*(.*) /$1$2 [R=301,NE,L]
+
+# Hide public folder from URL
+RewriteCond %{THE_REQUEST} /public/([^\s?]*) [NC]
+RewriteRule ^ %1 [L,NE,R=302]
+
+# Route all requests to public folder
+RewriteRule ^((?!public/).*)$ public/$1 [L,NC]
