@@ -19,11 +19,6 @@ use App\Models\TypeModel;
 
 abstract class BaseController extends Controller
 {
-    /**
-     * =========================================================
-     * MAINTENANCE MODULE CONFIGURATION
-     * =========================================================
-     */
     protected array $maintenanceModules = [
 
         'slants' => [
@@ -47,12 +42,6 @@ abstract class BaseController extends Controller
             'label'      => 'Sub-Category',
         ],
 
-        /**
-         * Internal name remains "departments"
-         * because your existing database/model uses Department.
-         *
-         * UI name = Government Offices.
-         */
         'departments' => [
             'model'      => DepartmentModel::class,
             'primaryKey' => 'department_id',
@@ -114,12 +103,6 @@ abstract class BaseController extends Controller
         ],
     ];
 
-
-    /**
-     * =========================================================
-     * INITIALIZE CONTROLLER
-     * =========================================================
-     */
     public function initController(
         RequestInterface $request,
         ResponseInterface $response,
@@ -132,12 +115,6 @@ abstract class BaseController extends Controller
         );
     }
 
-
-    /**
-     * =========================================================
-     * MAINTENANCE TAB LIST
-     * =========================================================
-     */
     protected function maintenanceTabList(): array
     {
         $list = [];
@@ -149,12 +126,6 @@ abstract class BaseController extends Controller
         return $list;
     }
 
-
-    /**
-     * =========================================================
-     * GET FIELDS FOR MAINTENANCE MODULE
-     * =========================================================
-     */
     protected function moduleFields(array $module): array
     {
         if (
@@ -172,12 +143,6 @@ abstract class BaseController extends Controller
         ];
     }
 
-
-    /**
-     * =========================================================
-     * CURRENT LOGGED-IN USER
-     * =========================================================
-     */
     protected function currentUser(): array
     {
         $firstName = trim(

@@ -17,11 +17,6 @@ class WriterController extends BaseController
         $this->userModel    = new UserModel();
     }
 
-    /**
-     * =========================================================
-     * WRITER DASHBOARD
-     * =========================================================
-     */
     public function index()
     {
         return view('UserDashboard', [
@@ -29,14 +24,6 @@ class WriterController extends BaseController
         ]);
     }
 
-    /**
-     * =========================================================
-     * DASHBOARD DATA
-     * =========================================================
-     *
-     * Everything displayed here is scoped to the currently
-     * logged-in writer.
-     */
     public function dashboardData()
     {
         $userId = (int) session('user_id');
@@ -57,9 +44,6 @@ class WriterController extends BaseController
             strtotime('-1 day')
         );
 
-        /*
-         * Helper for writer-scoped queries.
-         */
         $base = static function (
             ArticleModel $model,
             int $userId
@@ -68,11 +52,6 @@ class WriterController extends BaseController
                 ->where('created_by', $userId);
         };
 
-        /*
-         * -----------------------------------------------------
-         * Statistics
-         * -----------------------------------------------------
-         */
         $todayCount = $base(
             $this->articleModel,
             $userId
@@ -101,11 +80,6 @@ class WriterController extends BaseController
             ->where('YEAR(news_date)', 2026)
             ->countAllResults();
 
-        /*
-         * -----------------------------------------------------
-         * Writer information
-         * -----------------------------------------------------
-         */
         $me = $this->userModel->find($userId);
 
         $activities = [];
@@ -132,11 +106,6 @@ class WriterController extends BaseController
             ];
         }
 
-        /*
-         * -----------------------------------------------------
-         * Recent articles
-         * -----------------------------------------------------
-         */
         $recentArticles = $base(
             $this->articleModel,
             $userId
@@ -144,11 +113,6 @@ class WriterController extends BaseController
             ->orderBy('created_at', 'DESC')
             ->findAll(5);
 
-        /*
-         * -----------------------------------------------------
-         * Last seven days
-         * -----------------------------------------------------
-         */
         $weekLabels = [];
         $weekValues = [];
         $sparkline  = [];
@@ -175,11 +139,6 @@ class WriterController extends BaseController
             $sparkline[]  = $count;
         }
 
-        /*
-         * -----------------------------------------------------
-         * Monthly statistics
-         * -----------------------------------------------------
-         */
         $sparkline2025 = [];
         $sparkline2026 = [];
 
@@ -201,18 +160,6 @@ class WriterController extends BaseController
                 ->countAllResults();
         }
 
-        /*
-         * -----------------------------------------------------
-         * TOP NEWS — breakdown by Category and by Sub-Category
-         * -----------------------------------------------------
-         *
-         * Scoped to this writer's own articles only, same as
-         * every other stat on this dashboard. "Category" is a
-         * single value per article (simple GROUP BY); "Sub-
-         * Category" is a JSON-encoded array (an article can
-         * belong to more than one), so it's tallied in PHP
-         * after decoding each row.
-         */
         $categoryRows = $base(
             $this->articleModel,
             $userId
@@ -271,20 +218,6 @@ class WriterController extends BaseController
             ];
         }
 
-        /*
-         * -----------------------------------------------------
-         * TOP NEWS SOURCES — breakdown by outlet (from_name)
-         * -----------------------------------------------------
-         *
-         * Scoped to this writer's own articles, same as the
-         * rest of the dashboard. The articles table only stores
-         * the program_name (e.g. "24 Oras"), not the outlet it
-         * airs/publishes under, so this joins against
-         * tblprogram to resolve each article's program back to
-         * its from_name (e.g. "GMA Network") and tallies by
-         * that. Ranked by article count, highest first, capped
-         * to the top 10 so the leaderboard stays readable.
-         */
         $programRows = $base(
             $this->articleModel,
             $userId
@@ -307,19 +240,6 @@ class WriterController extends BaseController
             ];
         }, $programRows);
 
-        /*
-         * -----------------------------------------------------
-         * OVERALL SLANT — breakdown by sentiment
-         * (Positive / Negative / Neutral)
-         * -----------------------------------------------------
-         *
-         * Scoped to this writer's own articles. The articles
-         * table stores the raw slant symbol from
-         * tblslant.slant_name ("+", "-", "0"), not a readable
-         * word, so each row is mapped to a display label
-         * ("Positive"/"Negative"/"Neutral") via
-         * mapSlantSymbol() before being tallied.
-         */
         $slantRows = $base(
             $this->articleModel,
             $userId
@@ -352,20 +272,6 @@ class WriterController extends BaseController
             ];
         }
 
-        /*
-         * -----------------------------------------------------
-         * TOP NEWS SOURCES BY SENTIMENT
-         * (Program, split by slant)
-         * -----------------------------------------------------
-         *
-         * Scoped to this writer's own articles. Same source
-         * resolution as "Top News Sources" above (program ->
-         * tblprogram.from_name), grouped together with the
-         * article's raw slant symbol, which is then mapped via
-         * mapSlantSymbol() into the positive/neutral/negative
-         * buckets. Ranked by total article count, highest
-         * first, capped to the top 10.
-         */
         $sourceSlantRows = $base(
             $this->articleModel,
             $userId
@@ -413,16 +319,6 @@ class WriterController extends BaseController
             $topSourcesBySlant[] = array_merge(['label' => $label], $counts);
         }
 
-        /*
-         * -----------------------------------------------------
-         * NEWS BY STATION
-         * -----------------------------------------------------
-         *
-         * Scoped to this writer's own articles. Resolves each
-         * article's station back to tblstation.station_name and
-         * tallies by that. Ranked by article count, highest
-         * first.
-         */
         $stationRows = $base(
             $this->articleModel,
             $userId
@@ -444,11 +340,6 @@ class WriterController extends BaseController
             ];
         }, $stationRows);
 
-        /*
-         * -----------------------------------------------------
-         * Response
-         * -----------------------------------------------------
-         */
         return $this->response->setJSON([
             'status' => true,
 
@@ -492,26 +383,6 @@ class WriterController extends BaseController
         ]);
     }
 
-    /**
-     * =========================================================
-     * DECODE SUB-CATEGORY VALUES
-     * =========================================================
-     *
-     * The sub_category column is meant to hold a JSON-encoded
-     * array (an article can belong to more than one), but in
-     * practice it can show up in a few different shapes:
-     *
-     *   1. Proper JSON array:      ["A","B","C"]
-     *   2. JSON array missing its  "A","B","C"
-     *      outer brackets:
-     *   3. A single plain value:   A
-     *
-     * Case 2 is NOT valid JSON on its own — json_decode() just
-     * fails and returns null for it — so it's parsed as CSV
-     * instead, which correctly keeps commas *inside* a quoted
-     * value together (e.g. "Academic Freedom, Policies" stays
-     * one value rather than splitting into two).
-     */
     private function decodeSubCategoryValues(?string $raw): array
     {
         $raw = trim((string) $raw);
@@ -520,19 +391,12 @@ class WriterController extends BaseController
             return [];
         }
 
-        // Case 1: proper JSON array.
         $decoded = json_decode($raw, true);
 
-        // Case 2: JSON array with the outer [ ] stripped off —
-        // re-wrap and try again.
         if (! is_array($decoded)) {
             $decoded = json_decode('[' . $raw . ']', true);
         }
 
-        // Case 2 fallback: not valid JSON even after re-wrapping
-        // (e.g. unescaped characters) — parse as a quoted CSV
-        // row instead, which handles the same "A","B, C","D"
-        // shape without choking on internal commas.
         if (! is_array($decoded)) {
             $csv = str_getcsv($raw);
 
@@ -541,8 +405,6 @@ class WriterController extends BaseController
             }
         }
 
-        // Case 3: give up trying to split it — treat the whole
-        // string as a single value.
         if (! is_array($decoded)) {
             $decoded = [$raw];
         }
@@ -553,24 +415,6 @@ class WriterController extends BaseController
         ), static fn ($item) => $item !== ''));
     }
 
-    /**
-     * =========================================================
-     * MAP SLANT SYMBOL
-     * =========================================================
-     *
-     * tblslant stores each sentiment as a short symbol rather
-     * than a readable word:
-     *
-     *   slant_id 1 -> "+"  (Positive)
-     *   slant_id 2 -> "-"  (Negative)
-     *   slant_id 3 -> "0"  (Neutral)
-     *
-     * tblarticle.slant stores that same raw symbol. This maps
-     * a raw symbol to a display label (for the UI) and a
-     * lowercase bucket key (for tallying), falling back to
-     * "Neutral" for any unrecognized value so nothing silently
-     * disappears from the totals.
-     */
     private function mapSlantSymbol(?string $raw): array
     {
         $raw = trim((string) $raw);
@@ -583,14 +427,6 @@ class WriterController extends BaseController
         };
     }
 
-    /**
-     * =========================================================
-     * WRITER ARTICLE LIST
-     * =========================================================
-     *
-     * Only articles belonging to the currently logged-in
-     * writer are returned.
-     */
     public function data()
     {
         $userId = (int) session('user_id');
@@ -636,21 +472,9 @@ class WriterController extends BaseController
         ]);
     }
 
-    /**
-     * =========================================================
-     * DELETE ARTICLE
-     * =========================================================
-     *
-     * A WRITER may only delete their own article while it is
-     * still a DRAFT. Once submitted into the editorial pipeline,
-     * it is no longer theirs to remove — only an EDITOR/ADMIN can
-     * archive it via ArticleViewController::archive().
-     */
     public function delete(string $id)
     {
-        /*
-         * Permission matrix is the first security boundary.
-         */
+
         if (! Permissions::can('article', 'delete')) {
             return $this->response
                 ->setStatusCode(403)
@@ -662,9 +486,6 @@ class WriterController extends BaseController
 
         $article = $this->articleModel->find($id);
 
-        /*
-         * Writer can only delete their own article.
-         */
         if (
             ! $article
             || (int) $article['created_by'] !== (int) session('user_id')
@@ -677,11 +498,6 @@ class WriterController extends BaseController
                 ]);
         }
 
-        /*
-         * Only DRAFT articles are deletable by the writer. Once
-         * submitted (or later archived), the article is immutable
-         * from this endpoint.
-         */
         if (
             strtolower((string) $article['status']) !== 'draft'
         ) {

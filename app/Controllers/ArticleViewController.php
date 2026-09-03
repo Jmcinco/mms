@@ -45,20 +45,6 @@ class ArticleViewController extends BaseController
         $this->reporterModel    = new ReporterModel();
     }
 
-    /**
-     * =========================================================
-     * VIEW ARTICLE
-     * =========================================================
-     *
-     * Shared by ADMIN, EDITOR, and WRITER via the route filter.
-     * WRITER access here is intentionally READ-ONLY — a writer
-     * may open this screen to see how their submitted article
-     * looks, but can never edit or archive it from here. That
-     * lockdown is enforced explicitly below (not just left to
-     * the permissions matrix), so a future change to
-     * Permissions::can() can't accidentally reopen edit access
-     * for writers.
-     */
     public function view(string $id)
     {
         if (! Permissions::can('article', 'view')) {
@@ -78,16 +64,12 @@ class ArticleViewController extends BaseController
         $isArchived = strtolower(trim((string) ($article['status'] ?? ''))) === 'archived';
         $userId     = (int) session('user_id');
 
-        // WRITERs never get edit/archive rights on this screen,
-        // regardless of what the permissions matrix says.
         $canEditPermission = ! $isWriter
             && Permissions::can('article', 'edit')
             && ! $isArchived;
 
         $lockState = $this->articleModel->lockState($article, $userId);
 
-        // Writers don't acquire the editorial lock — they're not
-        // going to edit, so there's nothing to protect them from.
         if (! $isWriter && $canEditPermission && ! $lockState['is_locked']) {
             if ($this->articleModel->tryAcquireLock($id, $userId)) {
                 $article = $this->articleModel->find($id);
@@ -182,15 +164,6 @@ class ArticleViewController extends BaseController
         return $this->response->setJSON(['status' => true]);
     }
 
-    /**
-     * =========================================================
-     * UPDATE ARTICLE
-     * =========================================================
-     *
-     * EDITOR/ADMIN only. This route is not exposed to WRITER in
-     * routes.php, but the role check here is a second, explicit
-     * line of defense in case that ever changes.
-     */
     public function update(string $id)
     {
         $role = strtoupper(trim((string) session('role')));
@@ -322,13 +295,6 @@ class ArticleViewController extends BaseController
         ]);
     }
 
-    /**
-     * =========================================================
-     * ARCHIVE ARTICLE
-     * =========================================================
-     *
-     * EDITOR/ADMIN only — same explicit role guard as update().
-     */
     public function archive(string $id)
     {
         $role = strtoupper(trim((string) session('role')));

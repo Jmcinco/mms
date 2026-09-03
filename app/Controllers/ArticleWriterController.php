@@ -41,11 +41,6 @@ class ArticleWriterController extends BaseController
         $this->reporterModel = new ReporterModel();
     }
 
-    /**
-     * =========================================================
-     * NEWS ARTICLE LIST
-     * =========================================================
-     */
     public function index()
     {
         return view('NewsArticle', [
@@ -54,11 +49,6 @@ class ArticleWriterController extends BaseController
         ]);
     }
 
-    /**
-     * =========================================================
-     * ARTICLE LIST DATA
-     * =========================================================
-     */
     public function data()
     {
         $role = strtoupper(trim((string) session('role')));
@@ -160,17 +150,6 @@ class ArticleWriterController extends BaseController
         ]);
     }
 
-    /**
-     * =========================================================
-     * CREATE ARTICLE
-     *
-     * NEW
-     *   ↓
-     * Save Entry Start to Session
-     *   ↓
-     * Open Article Form
-     * =========================================================
-     */
     public function create()
     {
         $role = strtoupper(
@@ -186,9 +165,6 @@ class ArticleWriterController extends BaseController
                 );
         }
 
-        /*
-         * Create entry start only once.
-         */
         if (! session()->has('article_entry_start')) {
             session()->set(
                 'article_entry_start',
@@ -234,11 +210,6 @@ class ArticleWriterController extends BaseController
         ]);
     }
 
-    /**
-     * =========================================================
-     * SAVE ARTICLE
-     * =========================================================
-     */
 public function save()
 {
     try {
@@ -262,10 +233,6 @@ public function save()
             (string) $this->request->getPost('entry_start')
         );
 
-        /*
-         * Defensive fallback.
-         * If entry_start is not sent, use current datetime.
-         */
         if ($entryStart === '') {
             $entryStart = date('Y-m-d H:i:s');
         }
@@ -302,15 +269,8 @@ public function save()
         $data = [
             'news_date' => date('Y-m-d'),
 
-            /*
-             * ENTRY START
-             */
             'entry_start' => $entryStart,
 
-            /*
-             * ENTRY END
-             * Article submission time.
-             */
             'entry_end' => date('Y-m-d H:i:s'),
 
             'content' => $content,
@@ -377,9 +337,6 @@ public function save()
             'status' => 'submitted',
         ];
 
-        /*
-         * UPDATE EXISTING ARTICLE
-         */
         if ($articleId !== '') {
 
             $existing =
@@ -395,9 +352,6 @@ public function save()
                     ]);
             }
 
-            /*
-             * Preserve the original entry_start.
-             */
             $data['entry_start'] =
                 $existing['entry_start']
                 ?: $entryStart;
@@ -414,9 +368,6 @@ public function save()
             ]);
         }
 
-        /*
-         * CREATE NEW ARTICLE
-         */
         $data['id'] =
             $this->articleModel->generateId();
 
@@ -452,13 +403,6 @@ public function save()
             ]);
     }
 }
-
-    /**
-     * =========================================================
-     * DELETE ARTICLE
-     * WRITER CAN ONLY DELETE DRAFT
-     * =========================================================
-     */
     public function delete(string $id)
     {
         if (
@@ -535,11 +479,6 @@ public function save()
         ]);
     }
 
-    /**
-     * =========================================================
-     * CLEAN MULTIPLE VALUES
-     * =========================================================
-     */
     private function cleanMultipleValues(
         mixed $values
     ): array {

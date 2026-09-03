@@ -7,25 +7,10 @@ use CodeIgniter\Model;
 
 class MaintenanceController extends BaseController
 {
-    /**
-     * Max upload size accepted for bulk CSV imports, in bytes.
-     */
-    private const BULK_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-    /**
-     * Safety cap on the number of data rows processed per upload,
-     * so a mistakenly huge file can't tie up a request indefinitely.
-     */
-    private const BULK_MAX_ROWS = 5000;
+    private const BULK_MAX_FILE_SIZE = 5 * 1024 * 1024;
+    private const BULK_MAX_ROWS      = 5000;
 
-
-    /**
-     * =========================================================
-     * MAINTENANCE PAGE
-     * =========================================================
-     *
-     * GET /maintenance/{tab}
-     */
     public function index(string $tab = 'slants')
     {
         if (! isset($this->maintenanceModules[$tab])) {
@@ -54,14 +39,6 @@ class MaintenanceController extends BaseController
         ]);
     }
 
-
-    /**
-     * =========================================================
-     * GET DATA
-     * =========================================================
-     *
-     * GET /maintenance/data/{tab}
-     */
     public function data(string $tab)
     {
         $module = $this->moduleOrFail($tab);
@@ -89,7 +66,6 @@ class MaintenanceController extends BaseController
 
         $fields = $this->moduleFields($module);
 
-        /** @var Model $model */
         $model = new $module['model']();
 
         $rows = $model
@@ -120,17 +96,6 @@ class MaintenanceController extends BaseController
         ]);
     }
 
-
-    /**
-     * =========================================================
-     * CREATE / UPDATE
-     * =========================================================
-     *
-     * POST /maintenance/save/{tab}
-     *
-     * id = 0 -> CREATE
-     * id > 0 -> UPDATE
-     */
     public function save(string $tab)
     {
         $module = $this->moduleOrFail($tab);
@@ -146,11 +111,6 @@ class MaintenanceController extends BaseController
 
         $id = (int) $this->request->getPost('id');
 
-
-        // =====================================================
-        // CREATE AUTHORIZATION
-        // =====================================================
-
         if ($id === 0 && ! $perms['create']) {
             return $this->jsonError(
                 'You do not have permission to add '
@@ -160,11 +120,6 @@ class MaintenanceController extends BaseController
             );
         }
 
-
-        // =====================================================
-        // UPDATE AUTHORIZATION
-        // =====================================================
-
         if ($id > 0 && ! $perms['edit']) {
             return $this->jsonError(
                 'You do not have permission to edit '
@@ -173,11 +128,6 @@ class MaintenanceController extends BaseController
                 403
             );
         }
-
-
-        // =====================================================
-        // GET AND VALIDATE INPUT
-        // =====================================================
 
         $fields = $this->moduleFields($module);
 
@@ -200,14 +150,7 @@ class MaintenanceController extends BaseController
             $data[$field['key']] = $value;
         }
 
-
-        /** @var Model $model */
         $model = new $module['model']();
-
-
-        // =====================================================
-        // VERIFY RECORD EXISTS FOR UPDATE
-        // =====================================================
 
         if ($id > 0) {
             $existing = $model->find($id);
@@ -219,11 +162,6 @@ class MaintenanceController extends BaseController
                 );
             }
         }
-
-
-        // =====================================================
-        // DUPLICATE CHECK
-        // =====================================================
 
         $builder = $model->builder();
 
@@ -252,11 +190,6 @@ class MaintenanceController extends BaseController
             );
         }
 
-
-        // =====================================================
-        // UPDATE
-        // =====================================================
-
         if ($id > 0) {
             if (! $model->update($id, $data)) {
                 return $this->response
@@ -284,11 +217,6 @@ class MaintenanceController extends BaseController
             );
         }
 
-
-        // =====================================================
-        // CREATE
-        // =====================================================
-
         if (! $model->insert($data)) {
             return $this->response
                 ->setStatusCode(422)
@@ -315,23 +243,6 @@ class MaintenanceController extends BaseController
         );
     }
 
-
-    /**
-     * =========================================================
-     * BULK UPLOAD (CSV)
-     * =========================================================
-     *
-     * POST /maintenance/bulk/{tab}
-     *
-     * Accepts a CSV file (field name: csv_file). The first row
-     * must be a header row containing either the field "key"
-     * (e.g. "name", "from", "program_name") or the field "label"
-     * (e.g. "Name", "From", "Program Name") for each column, in
-     * any order. Extra/unknown columns are ignored.
-     *
-     * Every module that goes through moduleFields()/save() is
-     * supported automatically — no per-module code required.
-     */
     public function bulkUpload(string $tab)
     {
         $module = $this->moduleOrFail($tab);
@@ -345,14 +256,6 @@ class MaintenanceController extends BaseController
 
         $perms = Permissions::maintenance($tab);
 
-
-        // =====================================================
-        // AUTHORIZATION
-        //
-        // Bulk upload is treated the same as adding items one
-        // at a time, so it requires the CREATE permission.
-        // =====================================================
-
         if (! $perms['create']) {
             return $this->jsonError(
                 'You do not have permission to bulk upload '
@@ -361,11 +264,6 @@ class MaintenanceController extends BaseController
                 403
             );
         }
-
-
-        // =====================================================
-        // FILE VALIDATION
-        // =====================================================
 
         $file = $this->request->getFile('csv_file');
 
@@ -421,20 +319,11 @@ class MaintenanceController extends BaseController
             );
         }
 
-
-        // =====================================================
-        // MAP CSV COLUMNS -> MODULE FIELD KEYS
-        //
-        // Matches each header cell against the field's "key"
-        // first, then falls back to matching its "label", both
-        // case-insensitively, so either template style works.
-        // =====================================================
-
         $fields      = $this->moduleFields($module);
         $fieldKeys   = array_column($fields, 'key');
         $fieldLabels = array_map('strtolower', array_column($fields, 'label'));
 
-        $columnMap = []; // fieldKey => csvColumnIndex
+        $columnMap = [];
 
         foreach ($header as $index => $col) {
             $col = strtolower(trim((string) $col));
@@ -472,18 +361,12 @@ class MaintenanceController extends BaseController
             );
         }
 
-
-        // =====================================================
-        // PROCESS ROWS
-        // =====================================================
-
-        /** @var Model $model */
         $model = new $module['model']();
 
         $db = $model->db;
         $db->transStart();
 
-        $rowNumber = 1; // row 1 was the header
+        $rowNumber = 1;
         $processed = 0;
         $inserted  = 0;
         $skipped   = 0;
@@ -492,7 +375,6 @@ class MaintenanceController extends BaseController
         while (($row = fgetcsv($handle)) !== false) {
             $rowNumber++;
 
-            // Skip fully blank rows (common at end of file).
             if (count(array_filter($row, static fn ($v) => trim((string) $v) !== '')) === 0) {
                 continue;
             }
@@ -525,11 +407,6 @@ class MaintenanceController extends BaseController
                 continue;
             }
 
-
-            // -------------------------------------------------
-            // DUPLICATE CHECK (against existing records)
-            // -------------------------------------------------
-
             $builder = $model->builder();
 
             foreach ($fields as $field) {
@@ -544,11 +421,6 @@ class MaintenanceController extends BaseController
                 $skipped++;
                 continue;
             }
-
-
-            // -------------------------------------------------
-            // INSERT
-            // -------------------------------------------------
 
             if (! $model->insert($data)) {
                 $modelErrors = $model->errors();
@@ -574,8 +446,6 @@ class MaintenanceController extends BaseController
             );
         }
 
-        // Cap the number of individual row errors sent back so the
-        // response stays readable for very messy files.
         $errorPreview = array_slice($errors, 0, 50);
 
         if (count($errors) > count($errorPreview)) {
@@ -619,7 +489,7 @@ class MaintenanceController extends BaseController
 
         $handle = fopen('php://temp', 'w+');
         fputcsv($handle, array_column($fields, 'key'));
-        // One example row to make the expected format obvious.
+
         fputcsv($handle, array_map(
             static fn ($field) => 'Sample ' . $field['label'],
             $fields
@@ -637,14 +507,6 @@ class MaintenanceController extends BaseController
             ->setBody($csv);
     }
 
-
-    /**
-     * =========================================================
-     * DELETE
-     * =========================================================
-     *
-     * POST /maintenance/delete/{tab}/{id}
-     */
     public function delete(string $tab, int $id)
     {
         $module = $this->moduleOrFail($tab);
@@ -655,11 +517,6 @@ class MaintenanceController extends BaseController
                 404
             );
         }
-
-
-        // =====================================================
-        // DELETE AUTHORIZATION
-        // =====================================================
 
         if (! Permissions::canMaintenance(
             $tab,
@@ -673,14 +530,7 @@ class MaintenanceController extends BaseController
             );
         }
 
-
-        /** @var Model $model */
         $model = new $module['model']();
-
-
-        // =====================================================
-        // VERIFY RECORD EXISTS
-        // =====================================================
 
         if (! $model->find($id)) {
             return $this->jsonError(
@@ -688,11 +538,6 @@ class MaintenanceController extends BaseController
                 404
             );
         }
-
-
-        // =====================================================
-        // DELETE RECORD
-        // =====================================================
 
         if (! $model->delete($id)) {
             return $this->jsonError(
@@ -712,12 +557,6 @@ class MaintenanceController extends BaseController
         ]);
     }
 
-
-    /**
-     * =========================================================
-     * GET MODULE CONFIG
-     * =========================================================
-     */
     private function moduleOrFail(string $tab): ?array
     {
         $tab = strtolower(trim($tab));
@@ -725,12 +564,6 @@ class MaintenanceController extends BaseController
         return $this->maintenanceModules[$tab] ?? null;
     }
 
-
-    /**
-     * =========================================================
-     * STANDARD JSON ERROR
-     * =========================================================
-     */
     private function jsonError(
         string $message,
         int $statusCode

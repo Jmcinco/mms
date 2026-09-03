@@ -17,12 +17,8 @@ class EditorController extends BaseController
         $this->userModel    = new UserModel();
     }
 
+    
 
-    /**
-     * =========================================================
-     * EDITOR DASHBOARD
-     * =========================================================
-     */
     public function index()
     {
         return view('UserDashboard', [
@@ -30,12 +26,8 @@ class EditorController extends BaseController
         ]);
     }
 
+    
 
-    /**
-     * =========================================================
-     * DASHBOARD DATA
-     * =========================================================
-     */
     public function dashboardData()
     {
         $today = date('Y-m-d');
@@ -61,10 +53,7 @@ class EditorController extends BaseController
             ->where('YEAR(news_date)', 2026)
             ->countAllResults();
 
-
-        // =====================================================
-        // RECENT USERS
-        // =====================================================
+        
 
         $users = $this->userModel
             ->orderBy('user_id', 'DESC')
@@ -94,19 +83,13 @@ class EditorController extends BaseController
             $users
         );
 
-
-        // =====================================================
-        // RECENT ARTICLES
-        // =====================================================
+        
 
         $recentArticles = $this->articleModel
             ->orderBy('created_at', 'DESC')
             ->findAll(5);
 
-
-        // =====================================================
-        // LAST 7 DAYS
-        // =====================================================
+        
 
         $weekLabels = [];
         $weekValues = [];
@@ -134,10 +117,7 @@ class EditorController extends BaseController
             $sparkline[]  = $count;
         }
 
-
-        // =====================================================
-        // MONTHLY TOTALS
-        // =====================================================
+        
 
         $sparkline2025 = [];
         $sparkline2026 = [];
@@ -168,10 +148,7 @@ class EditorController extends BaseController
                     ->countAllResults();
         }
 
-
-        // =====================================================
-        // TOP NEWS — breakdown by Category and by Sub-Category
-        // =====================================================
+        
 
         $categoryRows = (clone $this->articleModel)
             ->select('category, COUNT(*) as cnt')
@@ -225,10 +202,7 @@ class EditorController extends BaseController
             ];
         }
 
-
-        // =====================================================
-        // TOP NEWS SOURCES — breakdown by outlet (from_name)
-        // =====================================================
+        
 
         $programRows = (clone $this->articleModel)
             ->select('tblprogram.from_name as source_name, COUNT(*) as cnt')
@@ -249,10 +223,7 @@ class EditorController extends BaseController
             ];
         }, $programRows);
 
-
-        // =====================================================
-        // OVERALL SLANT
-        // =====================================================
+        
 
         $slantRows = (clone $this->articleModel)
             ->select('slant, COUNT(*) as cnt')
@@ -283,10 +254,7 @@ class EditorController extends BaseController
             ];
         }
 
-
-        // =====================================================
-        // TOP NEWS SOURCES BY SENTIMENT
-        // =====================================================
+        
 
         $sourceSlantRows = (clone $this->articleModel)
             ->select('tblprogram.from_name as source_name, slant, COUNT(*) as cnt')
@@ -332,9 +300,7 @@ class EditorController extends BaseController
             $topSourcesBySlant[] = array_merge(['label' => $label], $counts);
         }
 
-        // =====================================================
-        // NEWS BY STATION
-        // =====================================================
+        
 
         $stationRows = (clone $this->articleModel)
             ->select('tblstation.station_name as source_name, COUNT(*) as cnt')
@@ -353,7 +319,6 @@ class EditorController extends BaseController
                 'count' => (int) $row['cnt'],
             ];
         }, $stationRows);
-
 
         return $this->response->setJSON([
             'status' => true,
@@ -399,12 +364,8 @@ class EditorController extends BaseController
         ]);
     }
 
+    
 
-    /**
-     * =========================================================
-     * NEWS TYPE DATA
-     * =========================================================
-     */
     public function newsTypeData()
     {
         $scope     = $this->request->getGet('scope') ?: 'today';
@@ -448,12 +409,8 @@ class EditorController extends BaseController
         ]);
     }
 
+    
 
-    /**
-     * =========================================================
-     * MONITORS LIST
-     * =========================================================
-     */
     public function monitorsList()
     {
         $rows = (clone $this->articleModel)
@@ -477,12 +434,8 @@ class EditorController extends BaseController
         ]);
     }
 
+    
 
-    /**
-     * =========================================================
-     * DECODE SUB-CATEGORY VALUES
-     * =========================================================
-     */
     private function decodeSubCategoryValues(?string $raw): array
     {
         $raw = trim((string) $raw);
@@ -515,11 +468,6 @@ class EditorController extends BaseController
         ), static fn ($item) => $item !== ''));
     }
 
-    /**
-     * =========================================================
-     * MAP SLANT SYMBOL
-     * =========================================================
-     */
     private function mapSlantSymbol(?string $raw): array
     {
         $raw = trim((string) $raw);
@@ -532,11 +480,6 @@ class EditorController extends BaseController
         };
     }
 
-    /**
-     * =========================================================
-     * EDITOR ARTICLE LIST
-     * =========================================================
-     */
     public function data()
     {
         $userId = (int) session('user_id');
@@ -574,11 +517,9 @@ class EditorController extends BaseController
             )
             ->findAll();
 
-        // -------------------------------------------------
-        // Decorate rows with lock state so the listing can
-        // gray out articles currently open for edit by
-        // another editor.
-        // -------------------------------------------------
+        
+
+        
         $rows = $this->articleModel->attachLockInfo(
             $rows,
             $userId
@@ -591,12 +532,8 @@ class EditorController extends BaseController
         ]);
     }
 
+    
 
-    /**
-     * =========================================================
-     * ARTICLE DELETE
-     * =========================================================
-     */
     public function delete(string $id)
     {
         if (! Permissions::can(
