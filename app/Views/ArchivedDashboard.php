@@ -264,11 +264,29 @@ function tsToEnd(unixTs) {
   return `${y}-${mo}-${da}, ${h}:${mi}:${s}`;
 }
 
+function entryDuration(a) {
+  const end = parseInt(a.entry_end) || 0;
+  const start = parseInt(a.entry_start) || 0;
+  if (end <= 0 || start <= 0) return '—';
+  const sec = Math.max(0, end - start);
+  const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+  const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+  const s = String(sec % 60).padStart(2, '0');
+  const d = new Date(end * 1000);
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const da = String(d.getDate()).padStart(2, '0');
+  return `${y}-${mo}-${da}, ${h}:${m}:${s}`;
+}
+
 function editDuration(a) {
   const end = parseInt(a.editing_end) || 0;
   const start = parseInt(a.editing_start) || 0;
-  if (end <= 0) return '—';
-  const sec = Math.max(0, end - (start > 0 ? start : (parseInt(a.entry_end) || 0)));
+  const entryEnd = parseInt(a.entry_end) || 0;
+  if (end <= 946656000) return '—';
+  const validStart = (start > 946656000) ? start : entryEnd;
+  if (validStart <= 946656000) return '—';
+  const sec = Math.max(0, end - validStart);
   const h = String(Math.floor(sec / 3600)).padStart(2, '0');
   const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
   const s = String(sec % 60).padStart(2, '0');
@@ -350,7 +368,7 @@ function renderResults() {
       <td>${a.type || '—'}</td>
       <td>${a.writer_first_name || ''} ${a.writer_last_name || ''}</td>
       <td>${tsToStart(a.entry_start)}</td>
-      <td>${tsToEnd(a.entry_end)}</td>
+      <td>${entryDuration(a)}</td>
       <td>${a.editor_first_name || ''} ${a.editor_last_name || ''}</td>
       <td>${tsToStart(a.editing_start)}</td>
       <td>${editDuration(a)}</td>
@@ -388,13 +406,19 @@ function exportPDF() {
     const name = `${a.writer_first_name || ''} ${a.writer_last_name || ''}`.trim() || '—';
     const end = parseInt(a.editing_end) || 0;
     const start = parseInt(a.editing_start) || 0;
-    const dur = end > 0 ? (Math.max(0, end - (start > 0 ? start : (parseInt(a.entry_end) || 0))) / 3600).toFixed(2) : '—';
+    const entryEnd = parseInt(a.entry_end) || 0;
+    const validStart = (start > 946656000) ? start : entryEnd;
+    const durSec = end > 946656000 && validStart > 946656000 && end > validStart ? Math.max(0, end - validStart) : 0;
+    const durH = String(Math.floor(durSec / 3600)).padStart(2, '0');
+    const durM = String(Math.floor((durSec % 3600) / 60)).padStart(2, '0');
+    const durS = String(durSec % 60).padStart(2, '0');
+    const dur = durSec > 0 ? `${durH}:${durM}:${durS}` : '—';
     return [
       a.id,
       a.type || '',
       name,
       tsToStart(a.entry_start),
-      tsToEnd(a.entry_end),
+      entryDuration(a),
       `${a.editor_first_name || ''} ${a.editor_last_name || ''}`.trim() || '—',
       tsToStart(a.editing_start),
       editDuration(a),
@@ -476,13 +500,19 @@ async function exportExcel() {
     const name = `${a.writer_first_name || ''} ${a.writer_last_name || ''}`.trim();
     const end = parseInt(a.editing_end) || 0;
     const start = parseInt(a.editing_start) || 0;
-    const dur = end > 0 ? (Math.max(0, end - (start > 0 ? start : (parseInt(a.entry_end) || 0))) / 3600).toFixed(2) : '—';
+    const entryEnd = parseInt(a.entry_end) || 0;
+    const validStart = (start > 946656000) ? start : entryEnd;
+    const durSec = end > 946656000 && validStart > 946656000 && end > validStart ? Math.max(0, end - validStart) : 0;
+    const durH = String(Math.floor(durSec / 3600)).padStart(2, '0');
+    const durM = String(Math.floor((durSec % 3600) / 60)).padStart(2, '0');
+    const durS = String(durSec % 60).padStart(2, '0');
+    const dur = durSec > 0 ? `${durH}:${durM}:${durS}` : '—';
     ws.addRow({
       id: a.id,
       type: a.type || '',
       writer: name,
       entry_start: tsToStart(a.entry_start),
-      entry_end: tsToEnd(a.entry_end),
+      entry_end: entryDuration(a),
       editor: `${a.editor_first_name || ''} ${a.editor_last_name || ''}`.trim(),
       editing_start: tsToStart(a.editing_start),
       editing_end: editDuration(a),
