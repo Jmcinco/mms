@@ -56,6 +56,7 @@ protected $allowedFields = [
     'created_at',
     'updated_at',
     'archived_at',
+    'archived_by',
 ];
 
     /*
@@ -117,6 +118,7 @@ protected $validationRules = [
     {
         return $this
             ->whereIn('status', [
+                'draft',
                 'submitted',
                 'editing',
                 'completed',
@@ -284,7 +286,7 @@ protected $validationRules = [
         */
         if (! in_array(
             $status,
-            ['submitted', 'editing'],
+            ['draft', 'submitted', 'editing'],
             true
         )) {
             return false;

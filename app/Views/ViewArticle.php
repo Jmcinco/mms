@@ -1,6 +1,7 @@
 <?php
     $role = strtoupper(session('role') ?? '');
     $isAdmin = $role === 'ADMIN';
+    $isWriter = $role === 'WRITER';
     $dashboardHref = site_url(ltrim(\App\Libraries\RoleRedirector::urlFor($role), '/'));
     $isArchived = strtolower((string) ($article['status'] ?? '')) === 'archived';
     $decodeMultiple = static function ($value): array {
@@ -199,36 +200,30 @@
             box-shadow: 0 0 0 .18rem rgba(76,139,245,.18);
         }
         .broadcast-time-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
             margin-bottom: 14px;
+            flex-wrap: wrap;
         }
         .broadcast-display {
             display: inline-flex;
-            align-items: stretch;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            overflow: hidden;
-            width: fit-content;
-        }
-        .broadcast-label {
-            background: var(--blue-100);
-            color: var(--blue-700);
+            align-items: center;
+            gap: 8px;
+            background: var(--blue-700);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 5px;
+            font-size: .85rem;
             font-weight: 600;
-            font-size: .95rem;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
             white-space: nowrap;
         }
-        .broadcast-value {
+        .bc-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
             background: #fff;
-            color: var(--navy);
-            font-weight: 700;
-            font-size: .95rem;
-            padding: 10px 24px;
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-            border-left: 1px solid var(--line);
+            animation: bcpulse 1s infinite;
         }
         .status-badge {
             font-size: .78rem;
@@ -351,6 +346,10 @@
         .ts-wrapper.disabled .ts-control {
             background: var(--bg);
             opacity: 1;
+        }
+        @keyframes bcpulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .3; }
         }
     </style>
 </head>
@@ -878,58 +877,40 @@
                     Metadata
                 </div>
 
-                <!-- BROADCAST TIME -->
+                <!-- EDIT TIME -->
+                <?php
+                    $eds = $article['editing_start'] ?? null;
+                    $hasEditStart = $eds && is_numeric($eds) && (int) $eds > 0;
+                ?>
 
                 <div class="broadcast-time-row">
 
+                    Edit Time
+
                     <div class="broadcast-display">
 
-                        <span class="broadcast-label">Broadcast Time</span>
+                        <?php if (! $isArchived): ?>
+                        <span class="bc-dot"></span>
+                        <?php endif ?>
 
-                        <span class="broadcast-value" id="broadcastTimeDisplay" >
-                            <?= esc(
-                                $article['broadcast_time']
-                                ?? '--:--:--'
-                            ) ?>
-                        </span>
+                        <i class="fa fa-stopwatch me-1"></i>
 
-                        <input
-                            type="hidden"
-                            name="broadcast_time"
-                            id="broadcastTimeInput"
-                            value="<?= esc($article['broadcast_time'] ?? '') ?>"
-                        >
+                        <strong id="editingTimer">
+                            <?php if ($isArchived && ! empty($article['editing_end']) && is_numeric($article['editing_end']) && (int) $article['editing_end'] > 0 && $hasEditStart): ?>
+                                <?php
+                                    $secs = max(0, (int) $article['editing_end'] - (int) $eds);
+                                    echo str_pad((int) floor($secs / 3600), 2, '0', STR_PAD_LEFT)
+                                        . ':' . str_pad((int) floor(($secs % 3600) / 60), 2, '0', STR_PAD_LEFT)
+                                        . ':' . str_pad($secs % 60, 2, '0', STR_PAD_LEFT);
+                                ?>
+                            <?php else: ?>
+                                00:00:00
+                            <?php endif ?>
+                        </strong>
 
                     </div>
 
                 </div>
-
-                <!-- ARCHIVED AT -->
-
-                <?php if (
-                    $isArchived &&
-                    ! empty($article['archived_at'])
-                ): ?>
-
-                    <div class="broadcast-time-row">
-
-                        <div class="broadcast-display">
-
-                            <span class="broadcast-label">Archived At</span>
-
-                            <span class="broadcast-value">
-
-                                <?= esc(
-                                    $article['archived_at']
-                                ) ?>
-
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                <?php endif ?>
 
                 <fieldset <?= $canEdit ? '' : 'disabled' ?>>
 
@@ -1352,51 +1333,6 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js" ></script>
 
 <script>
-
-    const display = document.getElementById('broadcastTimeDisplay');
-
-    const input = document.getElementById('broadcastTimeInput');
-
-    function updateBroadcastTime() {
-
-        const now = new Date();
-
-        let hours = now.getHours();
-
-        const minutes =
-            String(now.getMinutes()).padStart(2, '0');
-
-        const seconds =
-            String(now.getSeconds()).padStart(2, '0');
-
-        const ampm =
-            hours >= 12 ? 'PM' : 'AM';
-
-        hours = hours % 12;
-
-        if (hours === 0) {
-            hours = 12;
-        }
-
-        hours =
-            String(hours).padStart(2, '0');
-
-        const time =
-            hours + ':' +
-            minutes + ':' +
-            seconds + ' ' +
-            ampm;
-
-        display.textContent = time;
-
-        if (input) {
-            input.value = time;
-        }
-    }
-
-    updateBroadcastTime();
-
-    setInterval(updateBroadcastTime, 1000);
 
     const ARTICLE_ID =
         <?= json_encode($article['id']) ?>;
@@ -2207,9 +2143,81 @@
 
         startLockHeartbeat();
 
+        startEditingTimer();
+
     }
 
     init();
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDITING TIMER
+    |--------------------------------------------------------------------------
+    */
+
+    function formatDuration(totalSeconds) {
+
+        totalSeconds = Math.max(
+            0,
+            Math.floor(totalSeconds)
+        );
+
+        const hours =
+            Math.floor(totalSeconds / 3600);
+
+        const minutes =
+            Math.floor(
+                (totalSeconds % 3600) / 60
+            );
+
+        const seconds =
+            totalSeconds % 60;
+
+        return (
+            String(hours).padStart(2, '0')
+            + ':'
+            + String(minutes).padStart(2, '0')
+            + ':'
+            + String(seconds).padStart(2, '0')
+        );
+
+    }
+
+    function startEditingTimer() {
+
+        const el =
+            document.getElementById(
+                'editingTimer'
+            );
+
+        if (!el) return;
+
+        if (IS_ARCHIVED) return;
+
+        let seconds = 0;
+
+        const tick = () => {
+
+            seconds++;
+
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+
+            el.textContent =
+                String(h).padStart(2, '0')
+                + ':'
+                + String(m).padStart(2, '0')
+                + ':'
+                + String(s).padStart(2, '0');
+
+        };
+
+        tick();
+
+        setInterval(tick, 1000);
+
+    }
 
 </script>
 

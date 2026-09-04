@@ -83,12 +83,13 @@ class ArticleWriterController extends BaseController
         switch ($role) {
             case 'WRITER':
                 $builder = $this->articleModel
-                    ->where('user_id', $userId)
+                    ->where('created_by', $userId)
                     ->whereIn('status', [
-                        'DRAFT',
-                        'SUBMITTED',
-                        'EDITING',
-                        'COMPLETED',
+                        'draft',
+                        'submitted',
+                        'editing',
+                        'completed',
+                        'archived',
                     ])
                     ->orderBy('created_at', 'DESC');
                 break;
@@ -96,9 +97,10 @@ class ArticleWriterController extends BaseController
             case 'EDITOR':
                 $builder = $this->articleModel
                     ->whereIn('status', [
-                        'SUBMITTED',
-                        'EDITING',
-                        'COMPLETED',
+                        'draft',
+                        'submitted',
+                        'editing',
+                        'completed',
                     ])
                     ->orderBy('created_at', 'DESC');
                 break;
@@ -165,16 +167,14 @@ class ArticleWriterController extends BaseController
                 );
         }
 
-        if (! session()->has('article_entry_start')) {
-            session()->set(
-                'article_entry_start',
-                date('Y-m-d H:i:s')
-            );
-        }
-
-        $entryStartedAt = session(
-            'article_entry_start'
+        session()->set(
+            'article_entry_start',
+            (string) time()
         );
+
+        $entryStartedAt = (int) session(
+            'article_entry_start'
+        ) * 1000;
 
         return view('CreateArticle', [
             'article' => null,
@@ -229,26 +229,119 @@ public function save()
                 ]);
         }
 
-        $entryStart = trim(
-            (string) $this->request->getPost('entry_start')
+        $category = trim(
+            (string) $this->request->getPost('category')
         );
 
-        if ($entryStart === '') {
-            $entryStart = date('Y-m-d H:i:s');
+        if ($category === '') {
+            return $this->response->setStatusCode(422)
+                ->setJSON([
+                    'status' => false,
+                    'message' => 'Please select a Category.',
+                    'csrfToken' => csrf_hash(),
+                ]);
         }
-
-        $articleId = trim(
-            (string) $this->request->getPost('id')
-        );
 
         $subCategories =
             $this->request->getPost('subCategory');
 
+        if (!is_array($subCategories) || empty($subCategories)) {
+            return $this->response->setStatusCode(422)
+                ->setJSON([
+                    'status' => false,
+                    'message' => 'Please select at least one Sub-Category.',
+                    'csrfToken' => csrf_hash(),
+                ]);
+        }
+
         $governmentOffices =
             $this->request->getPost('govOffices');
 
+        if (!is_array($governmentOffices) || empty($governmentOffices)) {
+            return $this->response->setStatusCode(422)
+                ->setJSON([
+                    'status' => false,
+                    'message' => 'Please select at least one Government Office.',
+                    'csrfToken' => csrf_hash(),
+                ]);
+        }
+
+        $slant = trim(
+            (string) $this->request->getPost('slant')
+        );
+
+        if ($slant === '') {
+            return $this->response->setStatusCode(422)
+                ->setJSON([
+                    'status' => false,
+                    'message' => 'Please select a Slant.',
+                    'csrfToken' => csrf_hash(),
+                ]);
+        }
+
+        $type = trim(
+            (string) $this->request->getPost('type')
+        );
+
+        if ($type === '') {
+            return $this->response->setStatusCode(422)
+                ->setJSON([
+                    'status' => false,
+                    'message' => 'Please select a Type.',
+                    'csrfToken' => csrf_hash(),
+                ]);
+        }
+
+        $medium = trim(
+            (string) $this->request->getPost('medium')
+        );
+
+        if ($medium === '') {
+            return $this->response->setStatusCode(422)
+                ->setJSON([
+                    'status' => false,
+                    'message' => 'Please select a Medium.',
+                    'csrfToken' => csrf_hash(),
+                ]);
+        }
+
+        $station = trim(
+            (string) $this->request->getPost('station')
+        );
+
+        if ($station === '') {
+            return $this->response->setStatusCode(422)
+                ->setJSON([
+                    'status' => false,
+                    'message' => 'Please select a Station.',
+                    'csrfToken' => csrf_hash(),
+                ]);
+        }
+
+        $program = trim(
+            (string) $this->request->getPost('program')
+        );
+
+        if ($program === '') {
+            return $this->response->setStatusCode(422)
+                ->setJSON([
+                    'status' => false,
+                    'message' => 'Please select a Program.',
+                    'csrfToken' => csrf_hash(),
+                ]);
+        }
+
         $reporters =
             $this->request->getPost('reporter');
+
+        if (!is_array($reporters) || empty($reporters)) {
+            return $this->response->setStatusCode(422)
+                ->setJSON([
+                    'status' => false,
+                    'message' => 'Please select at least one Anchor/Reporter.',
+                    'csrfToken' => csrf_hash(),
+                ]);
+        }
 
         if (!is_array($subCategories)) {
             $subCategories = [];
@@ -262,6 +355,20 @@ public function save()
             $reporters = [];
         }
 
+        $entryStart = trim(
+            (string) $this->request->getPost('entry_start')
+        );
+
+        if ($entryStart === '' || ! is_numeric($entryStart)) {
+            $entryStart = (string) time();
+        } else {
+            $entryStart = (string) (int) $entryStart;
+        }
+
+        $articleId = trim(
+            (string) $this->request->getPost('id')
+        );
+
         $plainText = trim(
             strip_tags($content)
         );
@@ -271,7 +378,7 @@ public function save()
 
             'entry_start' => $entryStart,
 
-            'entry_end' => date('Y-m-d H:i:s'),
+            'entry_end' => (string) time(),
 
             'content' => $content,
 
@@ -334,7 +441,7 @@ public function save()
                     ? 'Yes'
                     : 'No',
 
-            'status' => 'submitted',
+            'status' => 'draft',
         ];
 
         if ($articleId !== '') {
@@ -427,7 +534,7 @@ public function save()
         if (
             ! $article
             || (int) (
-                $article['user_id'] ?? 0
+                $article['created_by'] ?? 0
             ) !== (int) session('user_id')
         ) {
             return $this->response

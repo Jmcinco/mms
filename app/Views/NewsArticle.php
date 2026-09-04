@@ -522,18 +522,6 @@ $isAdmin  = $role === 'ADMIN';
 
                 </tbody>
 
-                <tfoot>
-
-                    <tr class="bg-light">
-                        <th>#</th>
-                        <th>News ID</th>
-                        <th>Summary</th>
-                        <th>News Date</th>
-                        <th>Actions</th>
-                    </tr>
-
-                </tfoot>
-
             </table>
 
         </div>
@@ -692,10 +680,10 @@ $isAdmin  = $role === 'ADMIN';
                         </div>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="view-field">
-                            <div class="view-section-title">Entry Time</div>
-                            <div class="value" id="viewModalEntryTime">—</div>
+                            <div class="view-section-title">Timestamp</div>
+                            <div class="value" id="viewModalTimestamp">—</div>
                         </div>
                     </div>
 
@@ -894,19 +882,8 @@ function renderTable(rows){
 
         if(USER_ROLE==="WRITER"){
 
-            if(isDraft){
-
-                actions=`
-                    <a href="${EDIT_URL}?id=${encodeURIComponent(a.id)}"
-                        class="btn btn-edit">
-                        <i class="fa fa-pen"></i> Edit
-                    </a>
-                `;
-
-            }else{
-
-                // Submitted / archived — read-only modal, no
-                // navigation to the editor's review page at all.
+                // Writer can only view, never edit — all articles
+                // are read-only via the view modal.
                 actions=`
                     <button
                         type="button"
@@ -915,8 +892,6 @@ function renderTable(rows){
                         <i class="fa fa-eye"></i> View
                     </button>
                 `;
-
-            }
 
         }else if(isLocked && !lockedBySelf){
 
@@ -1044,7 +1019,20 @@ function viewArticle(id){
     document.getElementById("viewModalStation").textContent=a.station || "—";
     document.getElementById("viewModalProgram").textContent=a.program || "—";
     document.getElementById("viewModalAlert").textContent=a.alert || "No";
-    document.getElementById("viewModalEntryTime").textContent=a.entry_time || "—";
+
+    let timestampText = "—";
+    const ts = a.entry_end && parseInt(a.entry_end) > 0 ? a.entry_end : (a.entry_start && parseInt(a.entry_start) > 0 ? a.entry_start : null);
+    if (ts) {
+        const d = new Date(parseInt(ts) * 1000);
+        const y = d.getFullYear();
+        const mo = String(d.getMonth() + 1).padStart(2, '0');
+        const da = String(d.getDate()).padStart(2, '0');
+        const h = String(d.getHours()).padStart(2, '0');
+        const mi = String(d.getMinutes()).padStart(2, '0');
+        const s = String(d.getSeconds()).padStart(2, '0');
+        timestampText = `${y}-${mo}-${da}, ${h}:${mi}:${s}`;
+    }
+    document.getElementById("viewModalTimestamp").textContent=timestampText;
 
     document.getElementById("viewModalSubCategory").innerHTML=
         renderChips(decodeMultiple(a.sub_category));

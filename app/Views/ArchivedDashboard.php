@@ -215,7 +215,8 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <script>
 const DATA_URL = "<?= site_url('archived/data') ?>";
 
@@ -240,6 +241,42 @@ function formatTime(ts) {
   const ampm = h >= 12 ? 'PM' : 'AM';
   h = h % 12 || 12;
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} ${ampm}`;
+}
+
+function tsToStart(unixTs) {
+  if (!unixTs || parseInt(unixTs) <= 0) return '—';
+  const d = new Date(parseInt(unixTs) * 1000);
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const da = String(d.getDate()).padStart(2, '0');
+  return `${y}-${mo}-${da}, 00:00:00`;
+}
+
+function tsToEnd(unixTs) {
+  if (!unixTs || parseInt(unixTs) <= 0) return '—';
+  const d = new Date(parseInt(unixTs) * 1000);
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const da = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${y}-${mo}-${da}, ${h}:${mi}:${s}`;
+}
+
+function editDuration(a) {
+  const end = parseInt(a.editing_end) || 0;
+  const start = parseInt(a.editing_start) || 0;
+  if (end <= 0) return '—';
+  const sec = Math.max(0, end - (start > 0 ? start : (parseInt(a.entry_end) || 0)));
+  const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+  const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+  const s = String(sec % 60).padStart(2, '0');
+  const d = new Date(end * 1000);
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const da = String(d.getDate()).padStart(2, '0');
+  return `${y}-${mo}-${da}, ${h}:${m}:${s}`;
 }
 
 function populateFilter(id) {
@@ -310,26 +347,18 @@ function renderResults() {
   const tableRows = page.map(a => `
     <tr>
       <td><strong class="id-chip">${a.id}</strong></td>
-      <td>${a.news_date}</td>
-      <td>${a.broadcast_end ? formatTime(a.broadcast_end) : '—'}</td>
       <td>${a.type || '—'}</td>
-    </tr>
-    <tr class="detail-row">
-      <td colspan="4">
-        <div><span class="detail-label">CATEGORY</span><span class="detail-value">${a.category || '—'}</span></div>
-        <div class="mt-1"><span class="detail-label">SUB-CATEGORY</span><span class="detail-value">${a.sub_category || '—'}</span></div>
-        <div class="mt-1"><span class="detail-label">SUMMARY</span><span class="detail-value">${a.summary || '—'}</span></div>
-        <div class="mt-1"><span class="detail-label">SLANT</span><span class="detail-value">${a.slant || '—'}</span></div>
-        <div class="mt-1"><span class="detail-label">MEDIUM</span><span class="detail-value">${a.medium || '—'}</span></div>
-        <div class="mt-1"><span class="detail-label">STATION</span><span class="detail-value">${a.station || '—'}</span></div>
-        <div class="mt-1"><span class="detail-label">PROGRAM</span><span class="detail-value">${a.program || '—'}</span></div>
-        <div class="mt-1"><span class="detail-label">REPORTER</span><span class="detail-value">${a.reporter || '—'}</span></div>
-      </td>
+      <td>${a.writer_first_name || ''} ${a.writer_last_name || ''}</td>
+      <td>${tsToStart(a.entry_start)}</td>
+      <td>${tsToEnd(a.entry_end)}</td>
+      <td>${a.editor_first_name || ''} ${a.editor_last_name || ''}</td>
+      <td>${tsToStart(a.editing_start)}</td>
+      <td>${editDuration(a)}</td>
     </tr>`).join('');
 
   container.innerHTML = `
     <table class="table table-bordered">
-      <thead><tr><th>News ID</th><th>News Date</th><th>Broadcast Time</th><th>Type</th></tr></thead>
+      <thead><tr><th>News ID</th><th>Type</th><th>Writer</th><th>Entry Start</th><th>Entry End</th><th>Editor</th><th>Edit Start</th><th>Edit End</th></tr></thead>
       <tbody>${tableRows}</tbody>
     </table>`;
   document.getElementById('resultInfo').textContent = `Showing ${Math.min(size, filteredResults.length)} of ${filteredResults.length} results`;
@@ -348,22 +377,201 @@ function resetFilters() {
 
 function exportPDF() {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  const doc = new jsPDF('l', 'mm', 'a4');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(14, 44, 82);
   doc.text('Archives Data', 14, 15);
-  const rows = filteredResults.map(a => [a.id, a.news_date, (a.broadcast_end ? formatTime(a.broadcast_end) : '—'), a.type || '—', a.medium || '—', a.reporter || '—']);
-  doc.autoTable({ head: [['News ID','Date','Broadcast Time','Type','Medium','Reporter']], body: rows, startY: 20 });
+
+  const rows = filteredResults.map(a => {
+    const name = `${a.writer_first_name || ''} ${a.writer_last_name || ''}`.trim() || '—';
+    const end = parseInt(a.editing_end) || 0;
+    const start = parseInt(a.editing_start) || 0;
+    const dur = end > 0 ? (Math.max(0, end - (start > 0 ? start : (parseInt(a.entry_end) || 0))) / 3600).toFixed(2) : '—';
+    return [
+      a.id,
+      a.type || '',
+      name,
+      tsToStart(a.entry_start),
+      tsToEnd(a.entry_end),
+      `${a.editor_first_name || ''} ${a.editor_last_name || ''}`.trim() || '—',
+      tsToStart(a.editing_start),
+      editDuration(a),
+      dur
+    ];
+  });
+
+  doc.autoTable({
+    head: [['NEWS ID','TYPE','WRITER','ENTRY START','ENTRY END','EDITOR','EDIT START','EDIT END','AVERAGE']],
+    body: rows,
+    startY: 22,
+    styles: {
+      fontSize: 7,
+      font: 'helvetica',
+      textColor: [44, 62, 88],
+      lineColor: [227, 235, 245],
+      lineWidth: 0.3,
+      cellPadding: 2
+    },
+    headStyles: {
+      fillColor: [14, 44, 82],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 7,
+      lineColor: [28, 95, 196],
+      lineWidth: 0.5,
+      halign: 'center',
+      valign: 'middle'
+    },
+    alternateRowStyles: {
+      fillColor: [245, 247, 250],
+      lineColor: [227, 235, 245],
+      lineWidth: 0.2
+    },
+    columnStyles: {
+      0: { fontStyle: 'bold', textColor: [28, 95, 196], halign: 'left' },
+      1: { halign: 'center' },
+      2: { halign: 'left' },
+      3: { halign: 'center' },
+      4: { halign: 'center' },
+      5: { halign: 'left' },
+      6: { halign: 'center' },
+      7: { halign: 'center' },
+      8: { halign: 'center' }
+    },
+    didParseCell: function(data) {
+      if (data.section === 'head') {
+        data.cell.styles.halign = 'center';
+      }
+    },
+    margin: { left: 10, right: 10 }
+  });
+
   doc.save('archives.pdf');
 }
 
-function exportExcel() {
-  const data = filteredResults.map(a => ({
-    'News ID': a.id, 'News Date': a.news_date, 'Broadcast Time': (a.broadcast_end ? formatTime(a.broadcast_end) : ''),
-    'Type': a.type || '', 'Category': a.category || '', 'Medium': a.medium || '', 'Reporter': a.reporter || ''
-  }));
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Archives');
-  XLSX.writeFile(wb, 'archives.xlsx');
+async function exportExcel() {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'MMS';
+  wb.created = new Date();
+
+  const ws = wb.addWorksheet('Archives', {
+    views: [{ state: 'frozen', ySplit: 1 }]
+  });
+
+  ws.columns = [
+    { header: 'NEWS ID', key: 'id', width: 24 },
+    { header: 'TYPE', key: 'type', width: 14 },
+    { header: 'WRITER', key: 'writer', width: 22 },
+    { header: 'ENTRY START', key: 'entry_start', width: 24 },
+    { header: 'ENTRY END', key: 'entry_end', width: 24 },
+    { header: 'EDITOR', key: 'editor', width: 22 },
+    { header: 'EDIT START', key: 'editing_start', width: 24 },
+    { header: 'EDIT END', key: 'editing_end', width: 24 },
+    { header: 'AVERAGE', key: 'average', width: 14 }
+  ];
+
+  filteredResults.forEach(a => {
+    const name = `${a.writer_first_name || ''} ${a.writer_last_name || ''}`.trim();
+    const end = parseInt(a.editing_end) || 0;
+    const start = parseInt(a.editing_start) || 0;
+    const dur = end > 0 ? (Math.max(0, end - (start > 0 ? start : (parseInt(a.entry_end) || 0))) / 3600).toFixed(2) : '—';
+    ws.addRow({
+      id: a.id,
+      type: a.type || '',
+      writer: name,
+      entry_start: tsToStart(a.entry_start),
+      entry_end: tsToEnd(a.entry_end),
+      editor: `${a.editor_first_name || ''} ${a.editor_last_name || ''}`.trim(),
+      editing_start: tsToStart(a.editing_start),
+      editing_end: editDuration(a),
+      average: dur
+    });
+  });
+
+  const navy  = '0E2C52';
+  const blue  = '1C5FC4';
+  const ltBlue = 'E6F0FD';
+  const ink   = '2C3E58';
+  const muted = '7C8AA3';
+  const line  = 'E3EBF5';
+  const altRow = 'F5F7FA';
+
+  const headerRow = ws.getRow(1);
+  headerRow.height = 30;
+  headerRow.eachCell(cell => {
+    cell.font = {
+      bold: true,
+      size: 10,
+      name: 'Calibri',
+      color: { argb: 'FFFFFFFF' }
+    };
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF' + navy }
+    };
+    cell.alignment = {
+      horizontal: 'center',
+      vertical: 'middle',
+      wrapText: true
+    };
+    cell.border = {
+      top: { style: 'medium', color: { argb: 'FF' + blue } },
+      bottom: { style: 'medium', color: { argb: 'FF' + blue } },
+      left: { style: 'thin', color: { argb: 'FF' + line } },
+      right: { style: 'thin', color: { argb: 'FF' + line } }
+    };
+  });
+
+  for (let r = 2; r <= ws.rowCount; r++) {
+    const row = ws.getRow(r);
+    const isAlt = r % 2 === 0;
+
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      cell.font = {
+        size: 10,
+        name: 'Calibri',
+        color: { argb: 'FF' + ink }
+      };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: isAlt ? 'FF' + altRow : 'FFFFFFFF' }
+      };
+      cell.alignment = {
+        vertical: 'middle',
+        wrapText: colNumber === 16
+      };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF' + line } },
+        bottom: { style: 'thin', color: { argb: 'FF' + line } },
+        left: { style: 'thin', color: { argb: 'FF' + line } },
+        right: { style: 'thin', color: { argb: 'FF' + line } }
+      };
+    });
+
+    row.getCell(1).font = {
+      bold: true,
+      size: 10,
+      name: 'Calibri',
+      color: { argb: 'FF' + blue }
+    };
+
+    row.height = 20;
+  }
+
+  ws.autoFilter = {
+    from: 'A1',
+    to: 'R1'
+  };
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  saveAs(blob, 'archives.xlsx');
 }
 
 document.getElementById('pageSize').addEventListener('change', renderResults);

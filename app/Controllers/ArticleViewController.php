@@ -74,6 +74,10 @@ class ArticleViewController extends BaseController
             if ($this->articleModel->tryAcquireLock($id, $userId)) {
                 $article = $this->articleModel->find($id);
                 $lockState = $this->articleModel->lockState($article, $userId);
+
+                $this->articleModel->update($id, [
+                    'editing_start' => (string) time(),
+                ]);
             } else {
                 $lockState['is_locked'] = true;
             }
@@ -342,12 +346,13 @@ class ArticleViewController extends BaseController
                 ]);
         }
 
-        $now = date('Y-m-d H:i:s');
+        $now = (string) time();
 
         if (! $this->articleModel->update($id, [
             'status'        => 'archived',
-            'broadcast_end' => $now,
             'archived_at'   => $now,
+            'archived_by'   => $userId,
+            'editing_end'   => $now,
             'locked_by'     => null,
             'locked_at'     => null,
         ])) {
