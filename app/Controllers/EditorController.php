@@ -416,7 +416,7 @@ class EditorController extends BaseController
         $rows = (clone $this->articleModel)
             ->select('tblusers.user_id, tblusers.first_name, tblusers.last_name')
             ->join('tblusers', 'tblusers.user_id = tblarticle.created_by', 'inner')
-            ->where('tblarticle.status', 'submitted')
+            ->whereIn('tblarticle.status', ['draft', 'submitted'])
             ->groupBy('tblusers.user_id')
             ->orderBy('tblusers.first_name', 'ASC')
             ->findAll();

@@ -181,7 +181,7 @@ INSERT INTO `tblcategory` (`cat_id`, `category_name`) VALUES
 (44, 'Vice Presidency'),
 (45, 'Water'),
 (46, 'Weather'),
-(47, 'World news'),
+(47, 'World news'),m
 (48, 'Games and Amusement');
 
 -- --------------------------------------------------------

@@ -43,7 +43,16 @@ class ArchivedController extends BaseController
         // for those two roles.
         $scope = $role === 'WRITER' ? session('user_id') : null;
 
-        $query = $this->articleModel->archivedFor($scope);
+        $query = $this->articleModel
+            ->select('tblarticle.*, writer.first_name as writer_first_name, writer.last_name as writer_last_name, editor.first_name as editor_first_name, editor.last_name as editor_last_name')
+            ->join('tblusers as writer', 'writer.user_id = tblarticle.created_by', 'left')
+            ->join('tblusers as editor', 'editor.user_id = tblarticle.archived_by', 'left')
+            ->where('tblarticle.status', 'archived')
+            ->orderBy('tblarticle.archived_at', 'DESC');
+
+        if ($scope !== null) {
+            $query->where('tblarticle.created_by', $scope);
+        }
 
         $search      = $this->request->getGet('search');
         $dateFrom    = $this->request->getGet('date_from');

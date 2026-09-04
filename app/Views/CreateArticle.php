@@ -418,11 +418,7 @@ $selectedReporters = $decodeMultiple(
 |
 */
 
-$entryStartedAt = $entryStartedAt
-    ?? date('Y-m-d H:i:s');
-
-$entryStartedAtMs =
-    strtotime($entryStartedAt) * 1000;
+$entryStartedAt = $entryStartedAt ?? (time() * 1000);
 
 ?>
 
@@ -865,7 +861,7 @@ $entryStartedAtMs =
                 <input
                     type="hidden"
                     id="entryStart"
-                    value="<?= (int) $entryStartedAtMs ?>"
+                    value="<?= (int) $entryStartedAt ?>"
                 >
 
 
@@ -1614,6 +1610,165 @@ $entryStartedAtMs =
 
             showToast(
                 'Content cannot be empty.',
+                'danger'
+            );
+
+            return;
+
+        }
+
+        const category =
+            document
+                .getElementById('category')
+                .value
+                .trim();
+
+        if (!category) {
+
+            showToast(
+                'Please select a Category.',
+                'danger'
+            );
+
+            return;
+
+        }
+
+        const selectedSubs2 =
+            subCategorySelect
+                ? subCategorySelect.getValue()
+                : [];
+
+        if (
+            !Array.isArray(selectedSubs2)
+            || selectedSubs2.length === 0
+        ) {
+
+            showToast(
+                'Please select at least one Sub-Category.',
+                'danger'
+            );
+
+            return;
+
+        }
+
+        const selectedGov2 =
+            govOfficesSelect
+                ? govOfficesSelect.getValue()
+                : [];
+
+        if (
+            !Array.isArray(selectedGov2)
+            || selectedGov2.length === 0
+        ) {
+
+            showToast(
+                'Please select at least one Government Office.',
+                'danger'
+            );
+
+            return;
+
+        }
+
+        const slant =
+            document
+                .getElementById('slant')
+                .value
+                .trim();
+
+        if (!slant) {
+
+            showToast(
+                'Please select a Slant.',
+                'danger'
+            );
+
+            return;
+
+        }
+
+        const type =
+            document
+                .getElementById('type')
+                .value
+                .trim();
+
+        if (!type) {
+
+            showToast(
+                'Please select a Type.',
+                'danger'
+            );
+
+            return;
+
+        }
+
+        const medium =
+            document
+                .getElementById('medium')
+                .value
+                .trim();
+
+        if (!medium) {
+
+            showToast(
+                'Please select a Medium.',
+                'danger'
+            );
+
+            return;
+
+        }
+
+        const station =
+            document
+                .getElementById('station')
+                .value
+                .trim();
+
+        if (!station) {
+
+            showToast(
+                'Please select a Station.',
+                'danger'
+            );
+
+            return;
+
+        }
+
+        const program =
+            document
+                .getElementById('program')
+                .value
+                .trim();
+
+        if (!program) {
+
+            showToast(
+                'Please select a Program.',
+                'danger'
+            );
+
+            return;
+
+        }
+
+        const selectedReporters2 =
+            reporterSelect
+                ? reporterSelect.getValue()
+                : [];
+
+        if (
+            !Array.isArray(selectedReporters2)
+            || selectedReporters2.length === 0
+        ) {
+
+            showToast(
+                'Please select at least one Anchor/Reporter.',
                 'danger'
             );
 
