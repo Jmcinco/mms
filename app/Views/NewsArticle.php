@@ -1021,16 +1021,14 @@ function viewArticle(id){
     document.getElementById("viewModalAlert").textContent=a.alert || "No";
 
     let timestampText = "—";
-    const ts = a.entry_end && parseInt(a.entry_end) > 0 ? a.entry_end : (a.entry_start && parseInt(a.entry_start) > 0 ? a.entry_start : null);
-    if (ts) {
-        const d = new Date(parseInt(ts) * 1000);
-        const y = d.getFullYear();
-        const mo = String(d.getMonth() + 1).padStart(2, '0');
-        const da = String(d.getDate()).padStart(2, '0');
-        const h = String(d.getHours()).padStart(2, '0');
-        const mi = String(d.getMinutes()).padStart(2, '0');
-        const s = String(d.getSeconds()).padStart(2, '0');
-        timestampText = `${y}-${mo}-${da}, ${h}:${mi}:${s}`;
+    const startMs = a.entry_start && parseInt(a.entry_start) > 0 ? parseInt(a.entry_start) * 1000 : 0;
+    const endMs = a.entry_end && parseInt(a.entry_end) > 0 ? parseInt(a.entry_end) * 1000 : 0;
+    if (startMs && endMs && endMs >= startMs) {
+        const sec = Math.floor((endMs - startMs) / 1000);
+        const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+        const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+        const s = String(sec % 60).padStart(2, '0');
+        timestampText = `${h}:${m}:${s}`;
     }
     document.getElementById("viewModalTimestamp").textContent=timestampText;
 
