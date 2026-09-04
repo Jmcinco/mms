@@ -404,11 +404,9 @@ function exportPDF() {
 
   const rows = filteredResults.map(a => {
     const name = `${a.writer_first_name || ''} ${a.writer_last_name || ''}`.trim() || '—';
-    const end = parseInt(a.editing_end) || 0;
-    const start = parseInt(a.editing_start) || 0;
+    const editEnd = parseInt(a.editing_end) || 0;
     const entryEnd = parseInt(a.entry_end) || 0;
-    const validStart = (start > 946656000) ? start : entryEnd;
-    const durSec = end > 946656000 && validStart > 946656000 && end > validStart ? Math.max(0, end - validStart) : 0;
+    const durSec = editEnd > 946656000 && entryEnd > 946656000 && editEnd > entryEnd ? Math.max(0, editEnd - entryEnd) : 0;
     const durH = String(Math.floor(durSec / 3600)).padStart(2, '0');
     const durM = String(Math.floor((durSec % 3600) / 60)).padStart(2, '0');
     const durS = String(durSec % 60).padStart(2, '0');
@@ -498,11 +496,9 @@ async function exportExcel() {
 
   filteredResults.forEach(a => {
     const name = `${a.writer_first_name || ''} ${a.writer_last_name || ''}`.trim();
-    const end = parseInt(a.editing_end) || 0;
-    const start = parseInt(a.editing_start) || 0;
+    const editEnd = parseInt(a.editing_end) || 0;
     const entryEnd = parseInt(a.entry_end) || 0;
-    const validStart = (start > 946656000) ? start : entryEnd;
-    const durSec = end > 946656000 && validStart > 946656000 && end > validStart ? Math.max(0, end - validStart) : 0;
+    const durSec = editEnd > 946656000 && entryEnd > 946656000 && editEnd > entryEnd ? Math.max(0, editEnd - entryEnd) : 0;
     const durH = String(Math.floor(durSec / 3600)).padStart(2, '0');
     const durM = String(Math.floor((durSec % 3600) / 60)).padStart(2, '0');
     const durS = String(durSec % 60).padStart(2, '0');
