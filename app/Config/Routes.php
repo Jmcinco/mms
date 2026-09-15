@@ -6,7 +6,8 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-
+// app/Config/Routes.php
+$routes->get('archived/averages', 'ArchivedController::averages');
 /*
 |--------------------------------------------------------------------------
 | PUBLIC / AUTH
@@ -133,14 +134,55 @@ $routes->group(
             'WriterController::delete/$1'
         );
 
+    }
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| ARTICLE CREATION (WRITER + EDITOR)
+|--------------------------------------------------------------------------
+|
+| WRITER and EDITOR share the same create/edit-draft screen and the
+| same save endpoint. Both roles are permitted to reach this screen
+| at the routing level; the CONTROLLER decides which ability applies
+| ('create' vs 'edit') via Permissions::can(), and additionally
+| enforces ownership rules for WRITER (see
+| ArticleWriterController::save()).
+|
+| NOTE: this used to live under /writer/create-article. It has moved
+| to a shared, unprefixed path since it is no longer writer-exclusive.
+| Any bookmarks/links to the old /writer/create-article URL must be
+| updated to /create-article.
+|
+| session('article_entry_start') is still set inside
+| ArticleWriterController::create() regardless of which of these two
+| roles opens the form.
+*/
+
+$routes->group(
+    '',
+    [
+        'filter' => 'role:WRITER,EDITOR'
+    ],
+    static function (
+        $routes
+    ) {
 
         /*
          * -----------------------------------------------------
-         * CREATE NEW ARTICLE
+         * CREATE NEW ARTICLE / EDIT EXISTING DRAFT
          *
-         * This opens the form and starts:
+         * URL:
          *
-         * session('article_entry_start')
+         * /create-article
+         * /create-article?id=PMU-XXXXXXXX
+         *
+         * The create() controller validates:
+         *
+         * - Permissions::can('article', 'create', $role)
+         * - (for WRITER editing an existing draft) ownership
+         *   and draft status
          * -----------------------------------------------------
          */
 
@@ -152,32 +194,11 @@ $routes->group(
 
         /*
          * -----------------------------------------------------
-         * EDIT EXISTING DRAFT
-         *
-         * URL:
-         *
-         * /writer/create-article?id=PMU-XXXXXXXX
-         *
-         * The create() controller validates:
-         *
-         * - Article exists
-         * - Article belongs to current Writer
-         * - Status is draft
-         * -----------------------------------------------------
-         */
-
-
-        /*
-         * -----------------------------------------------------
          * SAVE DRAFT / SUBMIT ARTICLE
          *
          * POST:
          *
-         * action = draft
-         *
-         * or
-         *
-         * action = submit
+         * id = (blank for new article, set for an update)
          * -----------------------------------------------------
          */
 

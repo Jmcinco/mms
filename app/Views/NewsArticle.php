@@ -448,9 +448,10 @@
 <?php
 $role = strtoupper(session('role') ?? '');
 
-$isWriter = $role === 'WRITER';
-$isEditor = $role === 'EDITOR';
-$isAdmin  = $role === 'ADMIN';
+$isWriter  = $role === 'WRITER';
+$isEditor  = $role === 'EDITOR';
+$isAdmin   = $role === 'ADMIN';
+$canCreate = \App\Libraries\Permissions::can('article', 'create', $role);
 ?>
 
 <div class="container-fluid px-4 py-3">
@@ -472,10 +473,10 @@ $isAdmin  = $role === 'ADMIN';
         </div>
 
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            
+        <?php if ($canCreate): ?>
 
-            <?php if ($isWriter): ?>
-
-                <a href="<?= site_url('writer/create-article') ?>"
+                <a href="<?= site_url('create-article') ?>"
                    class="btn btn-add">
                     <i class="fa fa-plus me-1"></i>
                     Add New
@@ -722,7 +723,7 @@ $isAdmin  = $role === 'ADMIN';
 const USER_ROLE  = "<?= $role ?>";
 
 const DATA_URL   = "<?= site_url('news/data') ?>";
-const EDIT_URL   = "<?= site_url('writer/create-article') ?>";
+const EDIT_URL   = "<?= site_url('create-article') ?>";
 const VIEW_URL   = "<?= site_url('editor/view-article') ?>";
 
 let currentPage = 1;

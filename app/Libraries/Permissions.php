@@ -46,7 +46,7 @@ class Permissions
             ],
             'EDITOR' => [
                 'view'    => true,
-                'create'  => false,
+                'create'  => true,  // CHANGED — editors can now create articles
                 'edit'    => true,
                 'delete'  => false,
                 'archive' => true,
@@ -228,72 +228,72 @@ class Permissions
         // =====================================================
         // EDITOR
         // =====================================================
-'EDITOR' => [
+        'EDITOR' => [
 
-    'slants' => [
-        'view'   => true,
-        'create' => false,
-        'edit'   => false,
-        'delete' => false,
-    ],
+            'slants' => [
+                'view'   => true,
+                'create' => false,
+                'edit'   => false,
+                'delete' => false,
+            ],
 
-    'categories' => [
-        'view'   => true,
-        'create' => true,
-        'edit'   => true,
-        'delete' => false,
-    ],
+            'categories' => [
+                'view'   => true,
+                'create' => true,
+                'edit'   => true,
+                'delete' => false,
+            ],
 
-    'subcategories' => [
-        'view'   => true,
-        'create' => true,
-        'edit'   => true,
-        'delete' => false,
-    ],
+            'subcategories' => [
+                'view'   => true,
+                'create' => true,
+                'edit'   => true,
+                'delete' => false,
+            ],
 
-    // Government Offices
-    'departments' => [
-        'view'   => true,
-        'create' => true,
-        'edit'   => true,
-        'delete' => false,
-    ],
+            // Government Offices
+            'departments' => [
+                'view'   => true,
+                'create' => true,
+                'edit'   => true,
+                'delete' => false,
+            ],
 
-    'types' => [
-        'view'   => true,
-        'create' => false,
-        'edit'   => false,
-        'delete' => false,
-    ],
+            'types' => [
+                'view'   => true,
+                'create' => false,
+                'edit'   => false,
+                'delete' => false,
+            ],
 
-    'mediums' => [
-        'view'   => true,
-        'create' => false,
-        'edit'   => false,
-        'delete' => false,
-    ],
+            'mediums' => [
+                'view'   => true,
+                'create' => false,
+                'edit'   => false,
+                'delete' => false,
+            ],
 
-    'programs' => [
-        'view'   => true,
-        'create' => false,
-        'edit'   => false,
-        'delete' => false,
-    ],
+            'programs' => [
+                'view'   => true,
+                'create' => false,
+                'edit'   => false,
+                'delete' => false,
+            ],
 
-    'stations' => [
-        'view'   => true,
-        'create' => false,
-        'edit'   => false,
-        'delete' => false,
-    ],
+            'stations' => [
+                'view'   => true,
+                'create' => false,
+                'edit'   => false,
+                'delete' => false,
+            ],
 
-    'reporters' => [
-        'view'   => true,
-        'create' => false,
-        'edit'   => false,
-        'delete' => false,
-    ],
-],
+            'reporters' => [
+                'view'   => true,
+                'create' => false,
+                'edit'   => false,
+                'delete' => false,
+            ],
+        ],
     ];
 
 

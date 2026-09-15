@@ -409,8 +409,6 @@ class EditorController extends BaseController
         ]);
     }
 
-    
-
     public function monitorsList()
     {
         $rows = (clone $this->articleModel)
@@ -434,7 +432,6 @@ class EditorController extends BaseController
         ]);
     }
 
-    
 
     private function decodeSubCategoryValues(?string $raw): array
     {

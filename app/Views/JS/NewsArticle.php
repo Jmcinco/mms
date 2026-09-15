@@ -2,11 +2,12 @@
 
 $role = strtoupper(session('role') ?? '');
 
-$isWriter = $role === 'WRITER';
+$isWriter  = $role === 'WRITER';
+$canCreate = \App\Libraries\Permissions::can('article', 'create', $role);
 
 $dataUrl   = site_url('news/data');
 $deleteUrl = site_url('news/delete');
-$editUrl   = site_url('writer/create-article');
+$editUrl   = site_url('create-article');
 $viewUrl   = site_url('editor/view-article');
 
 ?>
@@ -16,6 +17,7 @@ $viewUrl   = site_url('editor/view-article');
 const NEWS_ARTICLE_CONFIG = <?= json_encode([
     'role'      => $role,
     'isWriter'  => $isWriter,
+    'canCreate' => $canCreate,
     'dataUrl'   => $dataUrl,
     'deleteUrl' => $deleteUrl,
     'editUrl'   => $editUrl,
@@ -24,9 +26,7 @@ const NEWS_ARTICLE_CONFIG = <?= json_encode([
 
 
 class NewsArticle {
-
     constructor(config = {}) {
-
         this.config = {
             role: '',
             isWriter: false,
@@ -47,9 +47,7 @@ class NewsArticle {
 
 
     init() {
-
         this.bindEvents();
-
         this.fetchArticles();
     }
 
@@ -71,10 +69,6 @@ class NewsArticle {
         const confirmDeleteBtn =
             document.getElementById('confirmDeleteBtn');
 
-
-        /*
-         * Search
-         */
         searchInput?.addEventListener(
             'input',
             () => this.filterTable()
@@ -707,10 +701,6 @@ class NewsArticle {
     }
 }
 
-
-/*
- * Initialize after DOM is ready.
- */
 document.addEventListener(
     'DOMContentLoaded',
     () => {
@@ -723,12 +713,6 @@ document.addEventListener(
 
         newsArticle.init();
 
-
-        /*
-         * Optional global reference.
-         * Useful if another script needs
-         * to access the dashboard.
-         */
         window.newsArticle =
             newsArticle;
     }

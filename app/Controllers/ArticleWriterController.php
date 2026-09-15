@@ -152,13 +152,22 @@ class ArticleWriterController extends BaseController
         ]);
     }
 
+    /**
+     * Opens the Create/Edit-Draft screen.
+     *
+     * Both WRITER and EDITOR are permitted here, gated by the
+     * 'article'/'create' entry in the permissions matrix rather than
+     * a hardcoded role string, so that granting/revoking the ability
+     * to create articles only ever needs to happen in one place
+     * (Permissions::MATRIX).
+     */
     public function create()
     {
         $role = strtoupper(
             trim((string) session('role'))
         );
 
-        if ($role !== 'WRITER') {
+        if (! Permissions::can('article', 'create', $role)) {
             return redirect()
                 ->to('/')
                 ->with(
@@ -178,6 +187,7 @@ class ArticleWriterController extends BaseController
 
         return view('CreateArticle', [
             'article' => null,
+            'role' => $role,
 
             'categories' => $this->categoryModel
                 ->findAll(),
@@ -210,306 +220,371 @@ class ArticleWriterController extends BaseController
         ]);
     }
 
-public function save()
-{
-    try {
-        $content = trim(
-            (string) $this->request->getPost('content')
-        );
+    public function save()
+    {
+        try {
 
-        if (
-            $content === ''
-            || $content === '<p><br></p>'
-        ) {
-            return $this->response->setStatusCode(422)
-                ->setJSON([
-                    'status' => false,
-                    'message' => 'Content cannot be empty.',
-                    'csrfToken' => csrf_hash(),
-                ]);
-        }
+            $role = strtoupper(
+                trim((string) session('role'))
+            );
 
-        $category = trim(
-            (string) $this->request->getPost('category')
-        );
+            $userId = (int) session('user_id');
 
-        if ($category === '') {
-            return $this->response->setStatusCode(422)
-                ->setJSON([
-                    'status' => false,
-                    'message' => 'Please select a Category.',
-                    'csrfToken' => csrf_hash(),
-                ]);
-        }
-
-        $subCategories =
-            $this->request->getPost('subCategory');
-
-        if (!is_array($subCategories) || empty($subCategories)) {
-            return $this->response->setStatusCode(422)
-                ->setJSON([
-                    'status' => false,
-                    'message' => 'Please select at least one Sub-Category.',
-                    'csrfToken' => csrf_hash(),
-                ]);
-        }
-
-        $governmentOffices =
-            $this->request->getPost('govOffices');
-
-        if (!is_array($governmentOffices) || empty($governmentOffices)) {
-            return $this->response->setStatusCode(422)
-                ->setJSON([
-                    'status' => false,
-                    'message' => 'Please select at least one Government Office.',
-                    'csrfToken' => csrf_hash(),
-                ]);
-        }
-
-        $slant = trim(
-            (string) $this->request->getPost('slant')
-        );
-
-        if ($slant === '') {
-            return $this->response->setStatusCode(422)
-                ->setJSON([
-                    'status' => false,
-                    'message' => 'Please select a Slant.',
-                    'csrfToken' => csrf_hash(),
-                ]);
-        }
-
-        $type = trim(
-            (string) $this->request->getPost('type')
-        );
-
-        if ($type === '') {
-            return $this->response->setStatusCode(422)
-                ->setJSON([
-                    'status' => false,
-                    'message' => 'Please select a Type.',
-                    'csrfToken' => csrf_hash(),
-                ]);
-        }
-
-        $medium = trim(
-            (string) $this->request->getPost('medium')
-        );
-
-        if ($medium === '') {
-            return $this->response->setStatusCode(422)
-                ->setJSON([
-                    'status' => false,
-                    'message' => 'Please select a Medium.',
-                    'csrfToken' => csrf_hash(),
-                ]);
-        }
-
-        $station = trim(
-            (string) $this->request->getPost('station')
-        );
-
-        if ($station === '') {
-            return $this->response->setStatusCode(422)
-                ->setJSON([
-                    'status' => false,
-                    'message' => 'Please select a Station.',
-                    'csrfToken' => csrf_hash(),
-                ]);
-        }
-
-        $program = trim(
-            (string) $this->request->getPost('program')
-        );
-
-        if ($program === '') {
-            return $this->response->setStatusCode(422)
-                ->setJSON([
-                    'status' => false,
-                    'message' => 'Please select a Program.',
-                    'csrfToken' => csrf_hash(),
-                ]);
-        }
-
-        $reporters =
-            $this->request->getPost('reporter');
-
-        if (!is_array($reporters) || empty($reporters)) {
-            return $this->response->setStatusCode(422)
-                ->setJSON([
-                    'status' => false,
-                    'message' => 'Please select at least one Anchor/Reporter.',
-                    'csrfToken' => csrf_hash(),
-                ]);
-        }
-
-        if (!is_array($subCategories)) {
-            $subCategories = [];
-        }
-
-        if (!is_array($governmentOffices)) {
-            $governmentOffices = [];
-        }
-
-        if (!is_array($reporters)) {
-            $reporters = [];
-        }
-
-        $entryStart = trim(
-            (string) $this->request->getPost('entry_start')
-        );
-
-        if ($entryStart === '' || ! is_numeric($entryStart)) {
-            $entryStart = (string) time();
-        } else {
-            $entryStart = (string) (int) $entryStart;
-        }
-
-        $articleId = trim(
-            (string) $this->request->getPost('id')
-        );
-
-        $plainText = trim(
-            strip_tags($content)
-        );
-
-        $data = [
-            'news_date' => date('Y-m-d'),
-
-            'entry_start' => $entryStart,
-
-            'entry_end' => (string) time(),
-
-            'content' => $content,
-
-            'summary' =>
-                $this->articleModel->buildSummary(
-                    $plainText
-                ),
-
-            'category' =>
-                $this->request->getPost('category')
-                ?: null,
-
-            'sub_category' =>
-                !empty($subCategories)
-                    ? json_encode(
-                        array_values($subCategories)
-                    )
-                    : null,
-
-            'gov_offices' =>
-                !empty($governmentOffices)
-                    ? json_encode(
-                        array_values($governmentOffices)
-                    )
-                    : null,
-
-            'remarks' =>
-                $this->request->getPost('remarks')
-                ?: null,
-
-            'slant' =>
-                $this->request->getPost('slant')
-                ?: null,
-
-            'type' =>
-                $this->request->getPost('type')
-                ?: null,
-
-            'medium' =>
-                $this->request->getPost('medium')
-                ?: null,
-
-            'station' =>
-                $this->request->getPost('station')
-                ?: null,
-
-            'program' =>
-                $this->request->getPost('program')
-                ?: null,
-
-            'reporter' =>
-                !empty($reporters)
-                    ? json_encode(
-                        array_values($reporters)
-                    )
-                    : null,
-
-            'alert' =>
-                $this->request->getPost('alert') === 'Yes'
-                    ? 'Yes'
-                    : 'No',
-
-            'status' => 'draft',
-        ];
-
-        if ($articleId !== '') {
-
-            $existing =
-                $this->articleModel->find($articleId);
-
-            if (!$existing) {
-                return $this->response
-                    ->setStatusCode(404)
+            if ($userId <= 0) {
+                return $this->response->setStatusCode(401)
                     ->setJSON([
                         'status' => false,
-                        'message' => 'Article not found.',
+                        'message' => 'Unauthorized.',
                         'csrfToken' => csrf_hash(),
                     ]);
             }
 
-            $data['entry_start'] =
-                $existing['entry_start']
-                ?: $entryStart;
-
-            $this->articleModel->update(
-                $articleId,
-                $data
+            $articleId = trim(
+                (string) $this->request->getPost('id')
             );
+
+            $isUpdate = $articleId !== '';
+
+            $ability = $isUpdate ? 'edit' : 'create';
+
+            if (! Permissions::can('article', $ability, $role)) {
+                return $this->response->setStatusCode(403)
+                    ->setJSON([
+                        'status' => false,
+                        'message' =>
+                            'You do not have permission to '
+                            . ($isUpdate ? 'edit' : 'create')
+                            . ' articles.',
+                        'csrfToken' => csrf_hash(),
+                    ]);
+            }
+
+            $existing = null;
+
+            if ($isUpdate) {
+
+                $existing =
+                    $this->articleModel->find($articleId);
+
+                if (!$existing) {
+                    return $this->response
+                        ->setStatusCode(404)
+                        ->setJSON([
+                            'status' => false,
+                            'message' => 'Article not found.',
+                            'csrfToken' => csrf_hash(),
+                        ]);
+                }
+
+                $isOwner =
+                    (int) ($existing['created_by'] ?? 0) === $userId;
+
+                // WRITER may only continue editing their own
+                // article through this screen, and only while it is
+                // still a DRAFT. EDITOR has an unconditional 'edit'
+                // ability per the permissions matrix, so no
+                // ownership/status restriction applies to EDITOR
+                // here.
+                if (
+                    $role === 'WRITER'
+                    && (
+                        ! $isOwner
+                        || strtoupper(
+                            (string) ($existing['status'] ?? '')
+                        ) !== 'DRAFT'
+                    )
+                ) {
+                    return $this->response
+                        ->setStatusCode(403)
+                        ->setJSON([
+                            'status' => false,
+                            'message' =>
+                                'You do not have permission to edit this article.',
+                            'csrfToken' => csrf_hash(),
+                        ]);
+                }
+            }
+
+            $content = trim(
+                (string) $this->request->getPost('content')
+            );
+
+            if (
+                $content === ''
+                || $content === '<p><br></p>'
+            ) {
+                return $this->response->setStatusCode(422)
+                    ->setJSON([
+                        'status' => false,
+                        'message' => 'Content cannot be empty.',
+                        'csrfToken' => csrf_hash(),
+                    ]);
+            }
+
+            $category = trim(
+                (string) $this->request->getPost('category')
+            );
+
+            if ($category === '') {
+                return $this->response->setStatusCode(422)
+                    ->setJSON([
+                        'status' => false,
+                        'message' => 'Please select a Category.',
+                        'csrfToken' => csrf_hash(),
+                    ]);
+            }
+
+            $subCategories =
+                $this->request->getPost('subCategory');
+
+            if (!is_array($subCategories) || empty($subCategories)) {
+                return $this->response->setStatusCode(422)
+                    ->setJSON([
+                        'status' => false,
+                        'message' => 'Please select at least one Sub-Category.',
+                        'csrfToken' => csrf_hash(),
+                    ]);
+            }
+
+            $governmentOffices =
+                $this->request->getPost('govOffices');
+
+            if (!is_array($governmentOffices) || empty($governmentOffices)) {
+                return $this->response->setStatusCode(422)
+                    ->setJSON([
+                        'status' => false,
+                        'message' => 'Please select at least one Government Office.',
+                        'csrfToken' => csrf_hash(),
+                    ]);
+            }
+
+            $slant = trim(
+                (string) $this->request->getPost('slant')
+            );
+
+            if ($slant === '') {
+                return $this->response->setStatusCode(422)
+                    ->setJSON([
+                        'status' => false,
+                        'message' => 'Please select a Slant.',
+                        'csrfToken' => csrf_hash(),
+                    ]);
+            }
+
+            $type = trim(
+                (string) $this->request->getPost('type')
+            );
+
+            if ($type === '') {
+                return $this->response->setStatusCode(422)
+                    ->setJSON([
+                        'status' => false,
+                        'message' => 'Please select a Type.',
+                        'csrfToken' => csrf_hash(),
+                    ]);
+            }
+
+            $medium = trim(
+                (string) $this->request->getPost('medium')
+            );
+
+            if ($medium === '') {
+                return $this->response->setStatusCode(422)
+                    ->setJSON([
+                        'status' => false,
+                        'message' => 'Please select a Medium.',
+                        'csrfToken' => csrf_hash(),
+                    ]);
+            }
+
+            $station = trim(
+                (string) $this->request->getPost('station')
+            );
+
+            if ($station === '') {
+                return $this->response->setStatusCode(422)
+                    ->setJSON([
+                        'status' => false,
+                        'message' => 'Please select a Station.',
+                        'csrfToken' => csrf_hash(),
+                    ]);
+            }
+
+            $program = trim(
+                (string) $this->request->getPost('program')
+            );
+
+            if ($program === '') {
+                return $this->response->setStatusCode(422)
+                    ->setJSON([
+                        'status' => false,
+                        'message' => 'Please select a Program.',
+                        'csrfToken' => csrf_hash(),
+                    ]);
+            }
+
+            $reporters =
+                $this->request->getPost('reporter');
+
+            if (!is_array($reporters) || empty($reporters)) {
+                return $this->response->setStatusCode(422)
+                    ->setJSON([
+                        'status' => false,
+                        'message' => 'Please select at least one Anchor/Reporter.',
+                        'csrfToken' => csrf_hash(),
+                    ]);
+            }
+
+            if (!is_array($subCategories)) {
+                $subCategories = [];
+            }
+
+            if (!is_array($governmentOffices)) {
+                $governmentOffices = [];
+            }
+
+            if (!is_array($reporters)) {
+                $reporters = [];
+            }
+
+            $entryStart = trim(
+                (string) $this->request->getPost('entry_start')
+            );
+
+            if ($entryStart === '' || ! is_numeric($entryStart)) {
+                $entryStart = (string) time();
+            } else {
+                $entryStart = (string) (int) $entryStart;
+            }
+
+            $plainText = trim(
+                strip_tags($content)
+            );
+
+            $data = [
+                'news_date' => date('Y-m-d'),
+
+                'entry_start' => $entryStart,
+
+                'entry_end' => (string) time(),
+
+                'content' => $content,
+
+                'summary' =>
+                    $this->articleModel->buildSummary(
+                        $plainText
+                    ),
+
+                'category' =>
+                    $this->request->getPost('category')
+                    ?: null,
+
+                'sub_category' =>
+                    !empty($subCategories)
+                        ? json_encode(
+                            array_values($subCategories)
+                        )
+                        : null,
+
+                'gov_offices' =>
+                    !empty($governmentOffices)
+                        ? json_encode(
+                            array_values($governmentOffices)
+                        )
+                        : null,
+
+                'remarks' =>
+                    $this->request->getPost('remarks')
+                    ?: null,
+
+                'slant' =>
+                    $this->request->getPost('slant')
+                    ?: null,
+
+                'type' =>
+                    $this->request->getPost('type')
+                    ?: null,
+
+                'medium' =>
+                    $this->request->getPost('medium')
+                    ?: null,
+
+                'station' =>
+                    $this->request->getPost('station')
+                    ?: null,
+
+                'program' =>
+                    $this->request->getPost('program')
+                    ?: null,
+
+                'reporter' =>
+                    !empty($reporters)
+                        ? json_encode(
+                            array_values($reporters)
+                        )
+                        : null,
+
+                'alert' =>
+                    $this->request->getPost('alert') === 'Yes'
+                        ? 'Yes'
+                        : 'No',
+
+                'status' => 'draft',
+            ];
+
+            if ($isUpdate) {
+
+                $data['entry_start'] =
+                    $existing['entry_start']
+                    ?: $entryStart;
+
+                $this->articleModel->update(
+                    $articleId,
+                    $data
+                );
+
+                return $this->response->setJSON([
+                    'status' => true,
+                    'message' => 'Article updated successfully!',
+                    'csrfToken' => csrf_hash(),
+                ]);
+            }
+
+            $data['id'] =
+                $this->articleModel->generateId();
+
+            $data['created_by'] = $userId;
+
+            $this->articleModel->insert($data);
 
             return $this->response->setJSON([
                 'status' => true,
-                'message' => 'Article updated successfully!',
+                'message' => 'Article submitted successfully!',
                 'csrfToken' => csrf_hash(),
             ]);
+
+        } catch (\Throwable $e) {
+
+            log_message(
+                'error',
+                'Article save error: {message}',
+                [
+                    'message' => $e->getMessage(),
+                ]
+            );
+
+            return $this->response
+                ->setStatusCode(500)
+                ->setJSON([
+                    'status' => false,
+                    'message' =>
+                        'Unable to save article. '
+                        . 'Please try again.',
+                    'csrfToken' => csrf_hash(),
+                ]);
         }
-
-        $data['id'] =
-            $this->articleModel->generateId();
-
-        $data['created_by'] =
-            (int) session('user_id');
-
-        $this->articleModel->insert($data);
-
-        return $this->response->setJSON([
-            'status' => true,
-            'message' => 'Article submitted successfully!',
-            'csrfToken' => csrf_hash(),
-        ]);
-
-    } catch (\Throwable $e) {
-
-        log_message(
-            'error',
-            'Article save error: {message}',
-            [
-                'message' => $e->getMessage(),
-            ]
-        );
-
-        return $this->response
-            ->setStatusCode(500)
-            ->setJSON([
-                'status' => false,
-                'message' =>
-                    'Unable to save article. '
-                    . 'Please try again.',
-                'csrfToken' => csrf_hash(),
-            ]);
     }
-}
+
     public function delete(string $id)
     {
         if (

@@ -8,18 +8,19 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   <style>
     :root{
-      --navy:      #0e2c52;   /* brand / headings / active nav text   */
-      --blue-700:  #1c5fc4;   /* primary accent — buttons, links      */
-      --blue-600:  #2f6fe0;   /* hover state of primary               */
-      --blue-500:  #4c8bf5;   /* chart lines, secondary accents       */
-      --blue-100:  #e6f0fd;   /* light hover / active backgrounds     */
-      --sky-200:   #cfe2fb;   /* secondary accents, chips             */
-      --ink-700:   #2c3e58;   /* body text                            */
-      --ink-400:   #7c8aa3;   /* muted / labels                       */
-      --bg:        #eef3f9;   /* page background                      */
-      --teal-600:  #0f9d8c;   /* status / success accent              */
+      --navy:      #0e2c52;
+      --blue-700:  #1c5fc4;
+      --blue-600:  #2f6fe0;
+      --blue-500:  #4c8bf5;
+      --blue-100:  #e6f0fd;
+      --sky-200:   #cfe2fb;
+      --ink-700:   #2c3e58;
+      --ink-400:   #7c8aa3;
+      --bg:        #eef3f9;
+      --teal-600:  #0f9d8c;
       --line:      #e3ebf5;
     }
 
@@ -78,9 +79,11 @@
       transition: background .2s;
     }
     .btn-login:hover { background: var(--blue-600); color:#fff; }
+    .btn-login:disabled { opacity: .6; cursor: not-allowed; }
     .input-group-text { background: var(--blue-100); border-right:none; color: var(--blue-700); }
     .input-group .form-control { border-left:none; }
     .alert-danger { font-size: .9rem; }
+    .g-recaptcha { display: flex; justify-content: center; margin-bottom: 20px; }
     footer { font-size: .8rem; color: var(--ink-400); text-align:center; margin-top:18px; }
   </style>
 </head>
@@ -100,14 +103,15 @@
           <input type="text" id="username" class="form-control" placeholder="Enter username"/>
         </div>
       </div>
-      <div class="mb-4">
+      <div class="mb-3">
         <label class="form-label fw-semibold">Password</label>
         <div class="input-group">
           <span class="input-group-text"><i class="fa fa-lock"></i></span>
           <input type="password" id="password" class="form-control" placeholder="Enter password"/>
         </div>
       </div>
-      <button class="btn btn-login w-100" onclick="doLogin()">
+      <div class="g-recaptcha" data-sitekey="<?= esc(env('recaptcha.siteKey')) ?>"></div>
+      <button class="btn btn-login w-100" id="btnSignIn" onclick="doLogin()">
         <i class="fa fa-sign-in-alt me-2"></i>SIGN IN
       </button>
     </div>
@@ -119,12 +123,26 @@ async function doLogin() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
     const alertBox = document.getElementById('alertBox');
+    const btn = document.getElementById('btnSignIn');
 
     alertBox.classList.add('d-none');
+
+    const recaptchaResponse = typeof grecaptcha !== 'undefined'
+        ? grecaptcha.getResponse()
+        : '';
+
+    if (!recaptchaResponse) {
+        alertBox.textContent = 'Please complete the reCAPTCHA challenge.';
+        alertBox.classList.remove('d-none');
+        return;
+    }
 
     const formData = new FormData();
     formData.append('username', username);
     formData.append('password', password);
+    formData.append('g-recaptcha-response', recaptchaResponse);
+
+    btn.disabled = true;
 
     try {
         const response = await fetch('auth/login', {
@@ -137,12 +155,12 @@ async function doLogin() {
         const text = await response.text();
         console.log("Response:", text);
 
-        // Try to parse JSON only if appropriate
         const result = JSON.parse(text);
 
         if (!result.status) {
             alertBox.textContent = result.message;
             alertBox.classList.remove('d-none');
+            if (typeof grecaptcha !== 'undefined') grecaptcha.reset();
             return;
         }
 
@@ -152,6 +170,9 @@ async function doLogin() {
         console.error("Fetch Error:", e);
         alertBox.textContent = e.message;
         alertBox.classList.remove('d-none');
+        if (typeof grecaptcha !== 'undefined') grecaptcha.reset();
+    } finally {
+        btn.disabled = false;
     }
 }
 </script>

@@ -10,63 +10,339 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"/>
   <style>
-    :root{
-      --navy:      #0e2c52;   /* brand / headings / active nav text   */
-      --blue-700:  #1c5fc4;   /* primary accent — buttons, links      */
-      --blue-600:  #2f6fe0;   /* hover state of primary               */
-      --blue-500:  #4c8bf5;   /* chart lines, secondary accents       */
-      --blue-100:  #e6f0fd;   /* light hover / active backgrounds     */
-      --sky-200:   #cfe2fb;   /* secondary accents, chips             */
-      --ink-700:   #2c3e58;   /* body text                            */
-      --ink-400:   #7c8aa3;   /* muted / labels                       */
-      --bg:        #eef3f9;   /* page background                      */
-      --teal-600:  #0f9d8c;   /* status / success accent              */
-      --line:      #e3ebf5;
+    :root {
+      --navy: #0e2c52;
+      --blue-700: #1c5fc4;
+      --blue-600: #2f6fe0;
+      --blue-500: #4c8bf5;
+      --blue-100: #e6f0fd;
+      --sky-200: #cfe2fb;
+      --ink-700: #2c3e58;
+      --ink-400: #7c8aa3;
+      --bg: #eef3f9;
+      --teal-600: #0f9d8c;
+      --line: #e3ebf5;
     }
 
-    body{background:var(--bg);font-family:'Inter',system-ui,-apple-system,sans-serif;color:var(--ink-700);}
-    .navbar{background:#fff;border-bottom:1px solid var(--line);padding:0 24px;}
-    .navbar-brand{font-size:1.45rem;font-weight:800;color:var(--navy) !important;letter-spacing:.2px;}
-    .navbar-brand i{color:var(--blue-700);}
-    .nav-link{color:var(--ink-400) !important;font-weight:500;font-size:.93rem;padding:18px 14px !important;border-bottom:2px solid transparent;}
-    .nav-link:hover,.nav-link.active{color:var(--blue-700) !important;border-bottom:2px solid var(--blue-700);}
-    .dropdown-menu{border:1px solid var(--line);box-shadow:0 10px 30px rgba(14,44,82,.1);border-radius:10px;padding:6px;}
-    .dropdown-item{border-radius:6px;}
-    .dropdown-item:hover{color:var(--blue-700);background:var(--blue-100);}
-    .user-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue-700);display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:.85rem;}
-    .badge-version{font-size:.7rem;padding:3px 7px;vertical-align:middle;background:var(--teal-600) !important;}
-    .page-title{font-size:1.3rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:10px;margin-bottom:20px;}
-    .filter-card{background:#fff;border-radius:14px;box-shadow:0 2px 14px rgba(14,44,82,.06);border:1px solid var(--line);padding:22px;margin-bottom:16px;}
-    .filter-title{font-size:.95rem;font-weight:700;color:var(--navy);margin-bottom:16px;}
-    .form-select,.form-control{font-size:.87rem;}
-    .form-select:focus,.form-control:focus{border-color:var(--blue-700);box-shadow:0 0 0 .18rem rgba(28,95,196,.18);}
-    .btn-query{border:1.5px solid #27ae60;color:#27ae60;background:#fff;font-size:.87rem;padding:6px 18px;border-radius:5px;}
-    .btn-query:hover{background:#27ae60;color:#fff;}
-    .btn-reset-form{border:1.5px solid #e74c3c;color:#e74c3c;background:#fff;font-size:.87rem;padding:6px 18px;border-radius:5px;}
-    .btn-reset-form:hover{background:#e74c3c;color:#fff;}
-    .query-text-card{background:#fff;border-radius:8px;padding:14px 20px;margin-bottom:16px;border-left:4px solid var(--blue-700);font-size:.87rem;color:var(--ink-700);}
-    .query-text-card strong{color:var(--blue-700);}
-    .data-card{background:#fff;border-radius:14px;box-shadow:0 2px 14px rgba(14,44,82,.06);border:1px solid var(--line);padding:22px;}
-    .data-title{font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:14px;}
-    .show-row{display:flex;align-items:center;gap:10px;font-size:.87rem;margin-bottom:14px;}
-    .btn-pdf{background:#fff;border:1.5px solid #e74c3c;color:#e74c3c;font-size:.78rem;padding:4px 12px;border-radius:4px;}
-    .btn-pdf:hover{background:#e74c3c;color:#fff;}
-    .btn-excel{background:#fff;border:1.5px solid #27ae60;color:#27ae60;font-size:.78rem;padding:4px 12px;border-radius:4px;}
-    .btn-excel:hover{background:#27ae60;color:#fff;}
-    .btn-print{background:#fff;border:1.5px solid var(--ink-400);color:var(--ink-400);font-size:.78rem;padding:4px 12px;border-radius:4px;}
-    .btn-print:hover{background:var(--ink-400);color:#fff;}
-    .table thead th{font-size:.81rem;font-weight:700;color:var(--ink-400);text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid var(--line);}
-    .table tbody td{font-size:.89rem;color:var(--ink-700);vertical-align:top;border-color:var(--line);}
-    .detail-row td{background:var(--blue-100);padding:14px 16px;}
-    .detail-label{font-size:.75rem;font-weight:700;color:var(--blue-700);letter-spacing:.5px;margin-right:6px;}
-    .detail-value{font-size:.87rem;color:var(--ink-700);}
-    .id-chip{color:var(--blue-700);font-weight:700;}
-    .no-data{color:var(--ink-400);text-align:center;padding:24px;font-size:.9rem;}
-    footer{font-size:.8rem;color:var(--ink-400);padding:20px 0;}
-    .bell-badge{position:relative;}
-    .bell-badge .fa-bell{color:var(--ink-400) !important;}
-    .bell-badge .badge{position:absolute;top:-4px;right:-6px;font-size:.6rem;background:#e0483f !important;}
-    .input-group-text{background:var(--blue-100);color:var(--blue-700);font-size:.85rem;border-right:none;}
+    body {
+      background: var(--bg);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: var(--ink-700);
+    }
+
+    .navbar {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      padding: 0 24px;
+    }
+
+    .navbar-brand {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--navy) !important;
+      letter-spacing: .2px;
+    }
+
+    .navbar-brand i {
+      color: var(--blue-700);
+    }
+
+    .nav-link {
+      color: var(--ink-400) !important;
+      font-weight: 500;
+      font-size: .93rem;
+      padding: 18px 14px !important;
+      border-bottom: 2px solid transparent;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: var(--blue-700) !important;
+      border-bottom: 2px solid var(--blue-700);
+    }
+
+    .dropdown-menu {
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 30px rgba(14, 44, 82, .1);
+      border-radius: 10px;
+      padding: 6px;
+    }
+
+    .dropdown-item {
+      border-radius: 6px;
+    }
+
+    .dropdown-item:hover {
+      color: var(--blue-700);
+      background: var(--blue-100);
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--blue-700);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #fff;
+      font-size: .85rem;
+    }
+
+    .badge-version {
+      font-size: .7rem;
+      padding: 3px 7px;
+      vertical-align: middle;
+      background: var(--teal-600) !important;
+    }
+
+    .page-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .filter-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 14px rgba(14, 44, 82, .06);
+      border: 1px solid var(--line);
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+
+    .filter-title {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 16px;
+    }
+
+    .form-select,
+    .form-control {
+      font-size: .87rem;
+    }
+
+    .form-select:focus,
+    .form-control:focus {
+      border-color: var(--blue-700);
+      box-shadow: 0 0 0 .18rem rgba(28, 95, 196, .18);
+    }
+
+    .btn-query {
+      border: 1.5px solid #27ae60;
+      color: #27ae60;
+      background: #fff;
+      font-size: .87rem;
+      padding: 6px 18px;
+      border-radius: 5px;
+    }
+
+    .btn-query:hover {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .btn-reset-form {
+      border: 1.5px solid #e74c3c;
+      color: #e74c3c;
+      background: #fff;
+      font-size: .87rem;
+      padding: 6px 18px;
+      border-radius: 5px;
+    }
+
+    .btn-reset-form:hover {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    .query-text-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 14px 20px;
+      margin-bottom: 16px;
+      border-left: 4px solid var(--blue-700);
+      font-size: .87rem;
+      color: var(--ink-700);
+    }
+
+    .query-text-card strong {
+      color: var(--blue-700);
+    }
+
+    .data-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 14px rgba(14, 44, 82, .06);
+      border: 1px solid var(--line);
+      padding: 22px;
+    }
+
+    .data-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 14px;
+    }
+
+    .show-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .87rem;
+      margin-bottom: 14px;
+    }
+
+    .btn-pdf {
+      background: #fff;
+      border: 1.5px solid #e74c3c;
+      color: #e74c3c;
+      font-size: .78rem;
+      padding: 4px 12px;
+      border-radius: 4px;
+    }
+
+    .btn-pdf:hover {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    .btn-excel {
+      background: #fff;
+      border: 1.5px solid #27ae60;
+      color: #27ae60;
+      font-size: .78rem;
+      padding: 4px 12px;
+      border-radius: 4px;
+    }
+
+    .btn-excel:hover {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .btn-excel[disabled] {
+      opacity: .6;
+      cursor: wait;
+    }
+
+    .btn-print {
+      background: #fff;
+      border: 1.5px solid var(--ink-400);
+      color: var(--ink-400);
+      font-size: .78rem;
+      padding: 4px 12px;
+      border-radius: 4px;
+    }
+
+    .btn-print:hover {
+      background: var(--ink-400);
+      color: #fff;
+    }
+
+    .table thead th {
+      font-size: .81rem;
+      font-weight: 700;
+      color: var(--ink-400);
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      border-bottom: 2px solid var(--line);
+    }
+
+    .table tbody td {
+      font-size: .89rem;
+      color: var(--ink-700);
+      vertical-align: top;
+      border-color: var(--line);
+    }
+
+    .news-row {
+      cursor: pointer;
+    }
+
+    .news-row:hover {
+      background: var(--blue-100);
+    }
+
+    .news-row.expanded {
+      background: var(--blue-100);
+    }
+
+    .detail-row td {
+      background: var(--blue-100);
+      padding: 18px 20px;
+    }
+
+    .detail-item {
+      margin-bottom: 10px;
+    }
+
+    .detail-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .detail-label {
+      display: inline-block;
+      min-width: 110px;
+      font-size: .75rem;
+      font-weight: 700;
+      color: var(--blue-700);
+      letter-spacing: .5px;
+      margin-right: 6px;
+      vertical-align: top;
+    }
+
+    .detail-value {
+      font-size: .87rem;
+      color: var(--ink-700);
+    }
+
+    .id-chip {
+      color: var(--blue-700);
+      font-weight: 700;
+    }
+
+    .no-data {
+      color: var(--ink-400);
+      text-align: center;
+      padding: 24px;
+      font-size: .9rem;
+    }
+
+    footer {
+      font-size: .8rem;
+      color: var(--ink-400);
+      padding: 20px 0;
+    }
+
+    .bell-badge {
+      position: relative;
+    }
+
+    .bell-badge .fa-bell {
+      color: var(--ink-400) !important;
+    }
+
+    .bell-badge .badge {
+      position: absolute;
+      top: -4px;
+      right: -6px;
+      font-size: .6rem;
+      background: #e0483f !important;
+    }
+
+    .input-group-text {
+      background: var(--blue-100);
+      color: var(--blue-700);
+      font-size: .85rem;
+      border-right: none;
+    }
   </style>
 </head>
 <body>
@@ -157,19 +433,82 @@
       </div>
     </div>
     <div class="row g-2 mb-2">
-      <div class="col-md-4"><select class="form-select" id="fCategory"><option value="">Choose Category...</option></select></div>
-      <div class="col-md-4"><select class="form-select" id="fSubCategory"><option value="">Choose SubCategory...</option></select></div>
-      <div class="col-md-4"><select class="form-select" id="fDepartment"><option value="">Choose Department...</option></select></div>
+      <div class="col-md-4">
+        <select class="form-select" id="fCategory">
+          <option value="">Choose Category...</option>
+          <?php foreach ($categories as $c): ?>
+            <option value="<?= esc($c['category_name']) ?>"><?= esc($c['category_name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <select class="form-select" id="fSubCategory">
+          <option value="">Choose SubCategory...</option>
+          <?php foreach ($subCategories as $s): ?>
+            <option value="<?= esc($s['sub_category']) ?>"><?= esc($s['sub_category']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <select class="form-select" id="fDepartment">
+          <option value="">Choose Department...</option>
+          <?php foreach ($departments as $d): ?>
+            <option value="<?= esc($d['department_name']) ?>"><?= esc($d['department_name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
     </div>
     <div class="row g-2 mb-2">
-      <div class="col-md-4"><select class="form-select" id="fSlant"><option value="">Choose Slant...</option></select></div>
-      <div class="col-md-4"><select class="form-select" id="fType"><option value="">Choose Type...</option></select></div>
-      <div class="col-md-4"><select class="form-select" id="fMedium"><option value="">Choose Medium...</option></select></div>
+      <div class="col-md-4">
+        <select class="form-select" id="fSlant">
+          <option value="">Choose Slant...</option>
+          <?php foreach ($slants as $s): ?>
+            <option value="<?= esc($s['slant_name']) ?>"><?= esc($s['slant_name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <select class="form-select" id="fType">
+          <option value="">Choose Type...</option>
+          <?php foreach ($types as $t): ?>
+            <option value="<?= esc($t['type_name']) ?>"><?= esc($t['type_name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <select class="form-select" id="fMedium">
+          <option value="">Choose Medium...</option>
+          <?php foreach ($mediums as $m): ?>
+            <option value="<?= esc($m['medium_name']) ?>"><?= esc($m['medium_name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
     </div>
     <div class="row g-2 mb-3">
-      <div class="col-md-4"><select class="form-select" id="fStation"><option value="">Choose Station...</option></select></div>
-      <div class="col-md-4"><select class="form-select" id="fProgram"><option value="">Choose Program...</option></select></div>
-      <div class="col-md-4"><select class="form-select" id="fReporter"><option value="">Choose Reporter...</option></select></div>
+      <div class="col-md-4">
+        <select class="form-select" id="fStation">
+          <option value="">Choose Station...</option>
+          <?php foreach ($stations as $s): ?>
+            <option value="<?= esc($s['station_name']) ?>"><?= esc($s['station_name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <select class="form-select" id="fProgram">
+          <option value="">Choose Program...</option>
+          <?php foreach ($programs as $p): ?>
+            <option value="<?= esc($p['program_name']) ?>"><?= esc($p['program_name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <select class="form-select" id="fReporter">
+          <option value="">Choose Reporter...</option>
+          <?php foreach ($reporters as $r): ?>
+            <option value="<?= esc($r['reporter_name']) ?>"><?= esc($r['reporter_name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
     </div>
     <div class="d-flex gap-2">
       <button class="btn-query" id="btnQuery"><i class="fa fa-search me-1"></i>Query</button>
@@ -219,95 +558,109 @@
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <script>
 const DATA_URL = "<?= site_url('archived/data') ?>";
+const AVERAGES_URL = "<?= site_url('archived/averages') ?>";
 
-const OPTIONS = {
-  fCategory:    <?= json_encode(['Peace And Order','Politics','Economy','Environment','Health','Sports','Entertainment']) ?>,
-  fSubCategory: <?= json_encode(['#Corruption, Anomaly, Misconduct','#DILG concerns','#Iglesia Ni Cristo (INC)','#Protest/rally','#Governance','#Crime & Law Enforcement']) ?>,
-  fDepartment:  <?= json_encode(['DILG','DOH','DepEd','DSWD','DOF','DND','DOLE']) ?>,
-  fSlant:       <?= json_encode(['+','Neutral','Negative','Positive']) ?>,
-  fType:        <?= json_encode(['News','Feature','Editorial','Opinion','Sports','Entertainment']) ?>,
-  fMedium:      <?= json_encode(['Online','Print','Radio','TV']) ?>,
-  fStation:     <?= json_encode(['Website','DZRH','DZMM','DWIZ','ABS-CBN','GMA-7']) ?>,
-  fProgram:     <?= json_encode(['Dzrhnews.com','ABS-CBN News','GMA News','CNN Philippines','Rappler','Inquirer.net']) ?>,
-  fReporter:    <?= json_encode(['Elijah Mitra','Juan dela Cruz','Maria Santos','Pedro Reyes','Ana Reyes','Carlos Bautista']) ?>,
-};
+const DISPLAY_TZ = 'Asia/Manila';
+
+const UNSET_TS = 946656000;
 
 let filteredResults = [];
+let lastQueryParams = '';
 let fp;
 
-function formatTime(ts) {
-  const d = ts ? new Date(ts) : new Date();
-  let h = d.getHours(), m = d.getMinutes(), s = d.getSeconds();
+
+function esc(v) {
+  if (v === null || v === undefined || v === '') return '—';
+  return String(v).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function tzParts(unixTs) {
+  const d = new Date(unixTs * 1000);
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: DISPLAY_TZ,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(d).map(p => [p.type, p.value]));
+  if (parts.hour === '24') parts.hour = '00';
+  return parts;
+}
+
+function tsToClock(unixTs) {
+  const n = parseInt(unixTs, 10);
+  if (!n || n <= 0) return '—';
+  const p = tzParts(n);
+  return `${p.year}-${p.month}-${p.day}, ${p.hour}:${p.minute}:${p.second}`;
+}
+
+function formatBroadcastTime(unixTs) {
+  const n = parseInt(unixTs, 10);
+  if (!n || n <= 0) return '—';
+  const p = tzParts(n);
+  let h = parseInt(p.hour, 10);
   const ampm = h >= 12 ? 'PM' : 'AM';
   h = h % 12 || 12;
-  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} ${ampm}`;
+  return `${p.year}-${p.month}-${p.day} ${String(h).padStart(2, '0')}:${p.minute}:${p.second} ${ampm}`;
 }
 
-function tsToStart(unixTs) {
-  if (!unixTs || parseInt(unixTs) <= 0) return '—';
-  const d = new Date(parseInt(unixTs) * 1000);
-  const y = d.getFullYear();
-  const mo = String(d.getMonth() + 1).padStart(2, '0');
-  const da = String(d.getDate()).padStart(2, '0');
-  return `${y}-${mo}-${da}, 00:00:00`;
-}
-
-function tsToEnd(unixTs) {
-  if (!unixTs || parseInt(unixTs) <= 0) return '—';
-  const d = new Date(parseInt(unixTs) * 1000);
-  const y = d.getFullYear();
-  const mo = String(d.getMonth() + 1).padStart(2, '0');
-  const da = String(d.getDate()).padStart(2, '0');
-  const h = String(d.getHours()).padStart(2, '0');
-  const mi = String(d.getMinutes()).padStart(2, '0');
-  const s = String(d.getSeconds()).padStart(2, '0');
-  return `${y}-${mo}-${da}, ${h}:${mi}:${s}`;
-}
-
-function entryDuration(a) {
-  const end = parseInt(a.entry_end) || 0;
-  const start = parseInt(a.entry_start) || 0;
-  if (end <= 0 || start <= 0) return '—';
-  const sec = Math.max(0, end - start);
+function secondsToDuration(sec) {
   const h = String(Math.floor(sec / 3600)).padStart(2, '0');
   const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
   const s = String(sec % 60).padStart(2, '0');
-  const d = new Date(end * 1000);
-  const y = d.getFullYear();
-  const mo = String(d.getMonth() + 1).padStart(2, '0');
-  const da = String(d.getDate()).padStart(2, '0');
-  return `${y}-${mo}-${da}, ${h}:${m}:${s}`;
+  return `${h}:${m}:${s}`;
 }
 
-function editDuration(a) {
-  const end = parseInt(a.editing_end) || 0;
-  const start = parseInt(a.editing_start) || 0;
-  const entryEnd = parseInt(a.entry_end) || 0;
-  if (end <= 946656000) return '—';
-  const validStart = (start > 946656000) ? start : entryEnd;
-  if (validStart <= 946656000) return '—';
-  const sec = Math.max(0, end - validStart);
-  const h = String(Math.floor(sec / 3600)).padStart(2, '0');
-  const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
-  const s = String(sec % 60).padStart(2, '0');
-  const d = new Date(end * 1000);
-  const y = d.getFullYear();
-  const mo = String(d.getMonth() + 1).padStart(2, '0');
-  const da = String(d.getDate()).padStart(2, '0');
-  return `${y}-${mo}-${da}, ${h}:${m}:${s}`;
+function entryDurationRaw(a) {
+  const start = parseInt(a.entry_start, 10) || 0;
+  const end   = parseInt(a.entry_end, 10) || 0;
+  if (start <= 0 || end <= 0 || end <= start) return '—';
+  return secondsToDuration(end - start);
 }
 
-function populateFilter(id) {
-  const sel = document.getElementById(id);
-  OPTIONS[id].forEach(v => sel.appendChild(new Option(v, v)));
+function editDurationRaw(a) {
+  const entryEnd = parseInt(a.entry_end, 10) || 0;
+  const rawStart = parseInt(a.editing_start, 10) || 0;
+  const start = (rawStart > UNSET_TS) ? rawStart : entryEnd;
+  const end   = parseInt(a.editing_end, 10) || 0;
+
+  if (end <= UNSET_TS || start <= UNSET_TS || end <= start) return '—';
+  return secondsToDuration(end - start);
 }
-['fCategory','fSubCategory','fDepartment','fSlant','fType','fMedium','fStation','fProgram','fReporter'].forEach(populateFilter);
+
+function decodeSubCategory(raw) {
+  raw = String(raw ?? '').trim();
+  if (!raw) return '';
+
+  let decoded = null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) decoded = parsed;
+  } catch (e) { /* not JSON, fall through */ }
+
+  if (!decoded) {
+    try {
+      const parsed = JSON.parse('[' + raw + ']');
+      if (Array.isArray(parsed)) decoded = parsed;
+    } catch (e) { /* fall through */ }
+  }
+
+  if (!decoded) decoded = raw.split(',');
+
+  return decoded
+    .map(v => String(v).trim().replace(/^"+|"+$/g, ''))
+    .filter(Boolean)
+    .join(', ');
+}
 
 fp = flatpickr('#dateRange', {
   mode: 'range',
   dateFormat: 'm/d/Y',
   defaultDate: [new Date(new Date().getFullYear(), new Date().getMonth(), 1), new Date()]
 });
+
 
 async function runQuery() {
   const dates = fp.selectedDates;
@@ -328,7 +681,9 @@ async function runQuery() {
     if (val) params.set(param, val);
   });
 
-  const res = await fetch(`${DATA_URL}?${params.toString()}`);
+  lastQueryParams = params.toString();
+
+  const res = await fetch(`${DATA_URL}?${lastQueryParams}`);
   const json = await res.json();
   filteredResults = json.data;
 
@@ -362,24 +717,48 @@ function renderResults() {
     return;
   }
 
-  const tableRows = page.map(a => `
-    <tr>
-      <td><strong class="id-chip">${a.id}</strong></td>
-      <td>${a.type || '—'}</td>
-      <td>${a.writer_first_name || ''} ${a.writer_last_name || ''}</td>
-      <td>${tsToStart(a.entry_start)}</td>
-      <td>${entryDuration(a)}</td>
-      <td>${a.editor_first_name || ''} ${a.editor_last_name || ''}</td>
-      <td>${tsToStart(a.editing_start)}</td>
-      <td>${editDuration(a)}</td>
-    </tr>`).join('');
+  const rowsHtml = page.map(a => {
+    const subCat = decodeSubCategory(a.sub_category);
+    const safeId = esc(a.id);
+
+    return `
+      <tr class="news-row" data-id="${safeId}">
+        <td><strong class="id-chip">${safeId}</strong></td>
+        <td>${esc(a.news_date)}</td>
+        <td>${formatBroadcastTime(a.entry_start)}</td>
+        <td>${esc(a.type)}</td>
+      </tr>
+      <tr class="detail-row" id="detail-${safeId}" style="display:none;">
+        <td colspan="4">
+          <div class="detail-item"><span class="detail-label">CATEGORY</span><span class="detail-value">${esc(a.category)}</span></div>
+          <div class="detail-item"><span class="detail-label">SUB-CATEGORY</span><span class="detail-value">${subCat || '—'}</span></div>
+          <div class="detail-item"><span class="detail-label">SUMMARY</span><span class="detail-value">${esc(a.summary)}</span></div>
+          <div class="detail-item"><span class="detail-label">SLANT</span><span class="detail-value">${esc(a.slant)}</span></div>
+          <div class="detail-item"><span class="detail-label">MEDIUM</span><span class="detail-value">${esc(a.medium)}</span></div>
+          <div class="detail-item"><span class="detail-label">STATION</span><span class="detail-value">${esc(a.station)}</span></div>
+          <div class="detail-item"><span class="detail-label">PROGRAM</span><span class="detail-value">${esc(a.program)}</span></div>
+          <div class="detail-item"><span class="detail-label">REPORTER</span><span class="detail-value">${esc(a.reporter)}</span></div>
+        </td>
+      </tr>`;
+  }).join('');
 
   container.innerHTML = `
     <table class="table table-bordered">
-      <thead><tr><th>News ID</th><th>Type</th><th>Writer</th><th>Entry Start</th><th>Entry End</th><th>Editor</th><th>Edit Start</th><th>Edit End</th></tr></thead>
-      <tbody>${tableRows}</tbody>
+      <thead><tr><th>News ID</th><th>News Date</th><th>Broadcast Time</th><th>Type</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
     </table>`;
   document.getElementById('resultInfo').textContent = `Showing ${Math.min(size, filteredResults.length)} of ${filteredResults.length} results`;
+
+  // Toggle a row's detail panel when the News ID row is clicked.
+  container.querySelectorAll('.news-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const detail = document.getElementById(`detail-${row.dataset.id}`);
+      if (!detail) return;
+      const isOpen = detail.style.display !== 'none';
+      detail.style.display = isOpen ? 'none' : '';
+      row.classList.toggle('expanded', !isOpen);
+    });
+  });
 }
 
 function resetFilters() {
@@ -388,10 +767,15 @@ function resetFilters() {
   ['fCategory','fSubCategory','fDepartment','fSlant','fType','fMedium','fStation','fProgram','fReporter']
     .forEach(id => { document.getElementById(id).selectedIndex = 0; });
   filteredResults = [];
+  lastQueryParams = '';
   document.getElementById('queryTextBox').style.display = 'none';
   document.getElementById('resultsContainer').innerHTML = '<div class="no-data"><i class="fa fa-filter me-2"></i>Use the filter above and click Query to view archived articles.</div>';
   document.getElementById('resultInfo').textContent = '';
 }
+
+/* ------------------------------------------------------------------ */
+/* Exports                                                              */
+/* ------------------------------------------------------------------ */
 
 function exportPDF() {
   const { jsPDF } = window.jspdf;
@@ -402,32 +786,21 @@ function exportPDF() {
   doc.setTextColor(14, 44, 82);
   doc.text('Archives Data', 14, 15);
 
-  const rows = filteredResults.map(a => {
-    const name = `${a.writer_first_name || ''} ${a.writer_last_name || ''}`.trim() || '—';
-    const end = parseInt(a.editing_end) || 0;
-    const start = parseInt(a.editing_start) || 0;
-    const entryEnd = parseInt(a.entry_end) || 0;
-    const validStart = (start > 946656000) ? start : entryEnd;
-    const durSec = end > 946656000 && validStart > 946656000 && end > validStart ? Math.max(0, end - validStart) : 0;
-    const durH = String(Math.floor(durSec / 3600)).padStart(2, '0');
-    const durM = String(Math.floor((durSec % 3600) / 60)).padStart(2, '0');
-    const durS = String(durSec % 60).padStart(2, '0');
-    const dur = durSec > 0 ? `${durH}:${durM}:${durS}` : '—';
-    return [
-      a.id,
-      a.type || '',
-      name,
-      tsToStart(a.entry_start),
-      entryDuration(a),
-      `${a.editor_first_name || ''} ${a.editor_last_name || ''}`.trim() || '—',
-      tsToStart(a.editing_start),
-      editDuration(a),
-      dur
-    ];
-  });
+  const rows = filteredResults.map(a => [
+    a.id,
+    a.type || '',
+    `${a.writer_first_name || ''} ${a.writer_last_name || ''}`.trim() || '—',
+    tsToClock(a.entry_start),
+    tsToClock(a.entry_end),
+    entryDurationRaw(a),
+    `${a.editor_first_name || ''} ${a.editor_last_name || ''}`.trim() || '—',
+    tsToClock(a.editing_start),
+    tsToClock(a.editing_end),
+    editDurationRaw(a),
+  ]);
 
   doc.autoTable({
-    head: [['NEWS ID','TYPE','WRITER','ENTRY START','ENTRY END','EDITOR','EDIT START','EDIT END','AVERAGE']],
+    head: [['NEWS ID','TYPE','WRITER','ENTRY START','ENTRY END','ENTRY DURATION','EDITOR','EDIT START','EDIT END','EDIT DURATION']],
     body: rows,
     startY: 22,
     styles: {
@@ -459,10 +832,11 @@ function exportPDF() {
       2: { halign: 'left' },
       3: { halign: 'center' },
       4: { halign: 'center' },
-      5: { halign: 'left' },
-      6: { halign: 'center' },
+      5: { halign: 'center' },
+      6: { halign: 'left' },
       7: { halign: 'center' },
-      8: { halign: 'center' }
+      8: { halign: 'center' },
+      9: { halign: 'center' }
     },
     didParseCell: function(data) {
       if (data.section === 'head') {
@@ -475,105 +849,32 @@ function exportPDF() {
   doc.save('archives.pdf');
 }
 
-async function exportExcel() {
-  const wb = new ExcelJS.Workbook();
-  wb.creator = 'MMS';
-  wb.created = new Date();
-
-  const ws = wb.addWorksheet('Archives', {
-    views: [{ state: 'frozen', ySplit: 1 }]
-  });
-
-  ws.columns = [
-    { header: 'NEWS ID', key: 'id', width: 24 },
-    { header: 'TYPE', key: 'type', width: 14 },
-    { header: 'WRITER', key: 'writer', width: 22 },
-    { header: 'ENTRY START', key: 'entry_start', width: 24 },
-    { header: 'ENTRY END', key: 'entry_end', width: 24 },
-    { header: 'EDITOR', key: 'editor', width: 22 },
-    { header: 'EDIT START', key: 'editing_start', width: 24 },
-    { header: 'EDIT END', key: 'editing_end', width: 24 },
-    { header: 'AVERAGE', key: 'average', width: 14 }
-  ];
-
-  filteredResults.forEach(a => {
-    const name = `${a.writer_first_name || ''} ${a.writer_last_name || ''}`.trim();
-    const end = parseInt(a.editing_end) || 0;
-    const start = parseInt(a.editing_start) || 0;
-    const entryEnd = parseInt(a.entry_end) || 0;
-    const validStart = (start > 946656000) ? start : entryEnd;
-    const durSec = end > 946656000 && validStart > 946656000 && end > validStart ? Math.max(0, end - validStart) : 0;
-    const durH = String(Math.floor(durSec / 3600)).padStart(2, '0');
-    const durM = String(Math.floor((durSec % 3600) / 60)).padStart(2, '0');
-    const durS = String(durSec % 60).padStart(2, '0');
-    const dur = durSec > 0 ? `${durH}:${durM}:${durS}` : '—';
-    ws.addRow({
-      id: a.id,
-      type: a.type || '',
-      writer: name,
-      entry_start: tsToStart(a.entry_start),
-      entry_end: entryDuration(a),
-      editor: `${a.editor_first_name || ''} ${a.editor_last_name || ''}`.trim(),
-      editing_start: tsToStart(a.editing_start),
-      editing_end: editDuration(a),
-      average: dur
-    });
-  });
-
-  const navy  = '0E2C52';
-  const blue  = '1C5FC4';
-  const ltBlue = 'E6F0FD';
-  const ink   = '2C3E58';
-  const muted = '7C8AA3';
-  const line  = 'E3EBF5';
-  const altRow = 'F5F7FA';
-
-  const headerRow = ws.getRow(1);
-  headerRow.height = 30;
-  headerRow.eachCell(cell => {
-    cell.font = {
-      bold: true,
-      size: 10,
-      name: 'Calibri',
-      color: { argb: 'FFFFFFFF' }
-    };
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF' + navy }
-    };
-    cell.alignment = {
-      horizontal: 'center',
-      vertical: 'middle',
-      wrapText: true
-    };
+function styleRawHeaderRow(row) {
+  row.eachCell(cell => {
+    cell.font = { bold: true, size: 10, name: 'Calibri', color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0E2C52' } };
+    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
     cell.border = {
-      top: { style: 'medium', color: { argb: 'FF' + blue } },
-      bottom: { style: 'medium', color: { argb: 'FF' + blue } },
-      left: { style: 'thin', color: { argb: 'FF' + line } },
-      right: { style: 'thin', color: { argb: 'FF' + line } }
+      top: { style: 'medium', color: { argb: 'FF1C5FC4' } },
+      bottom: { style: 'medium', color: { argb: 'FF1C5FC4' } },
+      left: { style: 'thin', color: { argb: 'FFE3EBF5' } },
+      right: { style: 'thin', color: { argb: 'FFE3EBF5' } }
     };
   });
+  row.height = 30;
+}
+
+function styleRawBodyRows(ws) {
+  const ink = '2C3E58', line = 'E3EBF5', altRow = 'F5F7FA', blue = '1C5FC4';
 
   for (let r = 2; r <= ws.rowCount; r++) {
     const row = ws.getRow(r);
     const isAlt = r % 2 === 0;
 
-    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-      cell.font = {
-        size: 10,
-        name: 'Calibri',
-        color: { argb: 'FF' + ink }
-      };
-      cell.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: isAlt ? 'FF' + altRow : 'FFFFFFFF' }
-      };
-      cell.alignment = {
-        vertical: 'middle',
-        wrapText: colNumber === 16
-      };
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      cell.font = { size: 10, name: 'Calibri', color: { argb: 'FF' + ink } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isAlt ? 'FF' + altRow : 'FFFFFFFF' } };
+      cell.alignment = { vertical: 'middle' };
       cell.border = {
         top: { style: 'thin', color: { argb: 'FF' + line } },
         bottom: { style: 'thin', color: { argb: 'FF' + line } },
@@ -582,26 +883,168 @@ async function exportExcel() {
       };
     });
 
-    row.getCell(1).font = {
-      bold: true,
-      size: 10,
-      name: 'Calibri',
-      color: { argb: 'FF' + blue }
-    };
-
+    row.getCell(1).font = { bold: true, size: 10, name: 'Calibri', color: { argb: 'FF' + blue } };
     row.height = 20;
   }
+}
 
-  ws.autoFilter = {
-    from: 'A1',
-    to: 'R1'
-  };
+async function fetchAverages() {
+  try {
+    const res = await fetch(`${AVERAGES_URL}?${lastQueryParams}`);
+    if (!res.ok) throw new Error('Averages request failed');
+    return await res.json();
+  } catch (e) {
+    console.error(e);
+    return { monitoring: {}, archiving: {} };
+  }
+}
 
-  const buf = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buf], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+/** "2026-01" -> "JANUARY 2026" */
+function monthLabelFromKey(key) {
+  const [y, m] = key.split('-').map(Number);
+  return new Date(y, m - 1, 1)
+    .toLocaleString('en-US', { month: 'long', year: 'numeric' })
+    .toUpperCase();
+}
+
+/** { "2026-01": [...], "2026-02": [...] } -> [{ monthLabel, rows }], chronological. */
+function toMonthBlocks(monthMap) {
+  return Object.keys(monthMap)
+    .sort()
+    .map(key => ({ monthLabel: monthLabelFromKey(key), rows: monthMap[key] }));
+}
+
+function renderMonthBlocks(ws, blocks, startCol) {
+  let row = 1;
+
+  blocks.forEach(block => {
+    const titleCell = ws.getCell(row, startCol);
+    titleCell.value = block.monthLabel;
+    titleCell.font = { bold: true, size: 12, color: { argb: 'FF0E2C52' } };
+    row += 1;
+
+    const headers = ['COUNT', 'NAME', 'START', 'END', 'AVERAGE'];
+    headers.forEach((h, i) => {
+      const cell = ws.getCell(row, startCol + i);
+      cell.value = h;
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFED7D31' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFED7D31' } },
+        bottom: { style: 'thin', color: { argb: 'FFED7D31' } },
+        left: { style: 'thin', color: { argb: 'FFED7D31' } },
+        right: { style: 'thin', color: { argb: 'FFED7D31' } }
+      };
+    });
+    row += 1;
+
+    if (block.rows.length === 0) {
+      ws.getCell(row, startCol).value = 'No data';
+      ws.getCell(row, startCol).font = { italic: true, color: { argb: 'FF7C8AA3' } };
+      row += 1;
+    } else {
+      block.rows.forEach(r => {
+        const cells = [r.count, r.name, r.start, r.end, r.average];
+        cells.forEach((val, i) => {
+          const cell = ws.getCell(row, startCol + i);
+          cell.value = (val === null || val === undefined) ? '—' : val;
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFE3EBF5' } },
+            bottom: { style: 'thin', color: { argb: 'FFE3EBF5' } },
+            left: { style: 'thin', color: { argb: 'FFE3EBF5' } },
+            right: { style: 'thin', color: { argb: 'FFE3EBF5' } }
+          };
+          if (i >= 2 && typeof val === 'number') {
+            cell.numFmt = '0.00';
+            cell.alignment = { horizontal: 'center' };
+          }
+        });
+        row += 1;
+      });
+    }
+
+    row += 1; // blank spacer row before the next month block
   });
-  saveAs(blob, 'archives.xlsx');
+
+  ws.getColumn(startCol).width     = 10; // COUNT
+  ws.getColumn(startCol + 1).width = 24; // NAME
+  ws.getColumn(startCol + 2).width = 10; // START
+  ws.getColumn(startCol + 3).width = 10; // END
+  ws.getColumn(startCol + 4).width = 12; // AVERAGE
+}
+
+/**
+ * Lays out all month blocks for one report into two side-by-side columns
+ * (A-E then G-K), first half of the months on the left, second half on
+ * the right — matching the source workbook's grid.
+ */
+function renderReportSheet(wb, sheetName, monthMap) {
+  const ws = wb.addWorksheet(sheetName);
+  const blocks = toMonthBlocks(monthMap);
+  const half = Math.ceil(blocks.length / 2);
+
+  renderMonthBlocks(ws, blocks.slice(0, half), 1); // columns A-E
+  if (blocks.length > half) {
+    renderMonthBlocks(ws, blocks.slice(half), 7); // columns G-K
+  }
+}
+
+async function exportExcel() {
+  const btn = document.getElementById('btnExcel');
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Building...';
+
+  try {
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'MMS';
+    wb.created = new Date();
+
+    const ws = wb.addWorksheet('Archives', { views: [{ state: 'frozen', ySplit: 1 }] });
+    ws.columns = [
+      { header: 'NEWS ID',        key: 'id',              width: 24 },
+      { header: 'TYPE',           key: 'type',            width: 14 },
+      { header: 'WRITER',         key: 'writer',          width: 22 },
+      { header: 'ENTRY START',    key: 'entry_start',     width: 20 },
+      { header: 'ENTRY END',      key: 'entry_end',       width: 20 },
+      { header: 'ENTRY DURATION', key: 'entry_duration',  width: 16 },
+      { header: 'EDITOR',         key: 'editor',          width: 22 },
+      { header: 'EDIT START',     key: 'editing_start',   width: 20 },
+      { header: 'EDIT END',       key: 'editing_end',     width: 20 },
+      { header: 'EDIT DURATION',  key: 'edit_duration',   width: 16 },
+    ];
+
+    filteredResults.forEach(a => {
+      ws.addRow({
+        id: a.id,
+        type: a.type || '',
+        writer: `${a.writer_first_name || ''} ${a.writer_last_name || ''}`.trim(),
+        entry_start: tsToClock(a.entry_start),
+        entry_end: tsToClock(a.entry_end),
+        entry_duration: entryDurationRaw(a),
+        editor: `${a.editor_first_name || ''} ${a.editor_last_name || ''}`.trim(),
+        editing_start: tsToClock(a.editing_start),
+        editing_end: tsToClock(a.editing_end),
+        edit_duration: editDurationRaw(a),
+      });
+    });
+
+    styleRawHeaderRow(ws.getRow(1));
+    styleRawBodyRows(ws);
+    ws.autoFilter = { from: 'A1', to: 'J1' };
+
+    const { monitoring = {}, archiving = {} } = await fetchAverages();
+    renderReportSheet(wb, 'Monitoring', monitoring);
+    renderReportSheet(wb, 'Archiving', archiving);
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, 'archives.xlsx');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  }
 }
 
 document.getElementById('pageSize').addEventListener('change', renderResults);

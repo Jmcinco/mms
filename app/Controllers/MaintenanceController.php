@@ -319,6 +319,18 @@ class MaintenanceController extends BaseController
             );
         }
 
+        // Strip a UTF-8 BOM (EF BB BF) if present. Many spreadsheet tools
+        // (Excel "CSV UTF-8", some Windows editors, Google Sheets exports)
+        // prepend a BOM to the file. Because the BOM attaches to the very
+        // first byte of the file, it silently glues itself onto the first
+        // header cell (e.g. "station_from" becomes "\xEF\xBB\xBFstation_from"),
+        // which then fails to match any field key/label below even though
+        // the column is visibly correct to the human eye. trim() does NOT
+        // remove BOM bytes, so it must be stripped explicitly.
+        if (isset($header[0])) {
+            $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $header[0]);
+        }
+
         $fields      = $this->moduleFields($module);
         $fieldKeys   = array_column($fields, 'key');
         $fieldLabels = array_map('strtolower', array_column($fields, 'label'));

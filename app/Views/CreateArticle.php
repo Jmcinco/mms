@@ -1285,8 +1285,8 @@ $entryStartedAt = $entryStartedAt ?? (time() * 1000);
 
 <script>
 
-    const SAVE_URL =
-        '<?= site_url('writer/create-article/save') ?>';
+        const SAVE_URL =
+        '<?= site_url('create-article/save') ?>';
 
     const LISTING_URL =
         '<?= site_url('news') ?>';
